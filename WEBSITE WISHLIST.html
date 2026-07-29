@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Wishlist Pro Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Nav active states */
+        .nav-item.active {
+            background-color: #eff6ff;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .nav-item-mobile.active {
+            color: #2563eb;
+        }
+        .nav-item-mobile.active .nav-icon-wrapper {
+            background-color: #eff6ff;
+            padding: 4px 16px;
+            border-radius: 9999px;
+        }
+
+        /* Modal transitions */
+        .modal-enter { opacity: 0; transform: scale(0.95); }
+        .modal-enter-active { opacity: 1; transform: scale(1); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .modal-exit { opacity: 1; transform: scale(1); }
+        .modal-exit-active { opacity: 0; transform: scale(0.95); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Toast animations */
+        .toast-enter { transform: translateY(100%); opacity: 0; }
+        .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.3s ease-out; }
+        .toast-exit-active { transform: translateY(100%); opacity: 0; transition: all 0.3s ease-in; }
+
+        /* Hide number input spinners */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="text-slate-800 h-screen overflow-hidden flex flex-col md:flex-row">
+
+    <!-- Sidebar (Desktop) -->
+    <aside class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 h-full z-20 shadow-sm relative">
+        <div class="p-6 flex items-center gap-3 border-b border-slate-100">
+            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl shadow-blue-200 shadow-lg">
+                <i class="fas fa-star"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 leading-tight">Wishlist<span class="text-blue-600">Pro</span></h1>
+                <p class="text-xs text-slate-500 font-medium" id="user-status-desktop"><i class="fas fa-wifi text-emerald-500"></i> Offline Mode</p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <button onclick="navigate('dashboard')" id="nav-dashboard-desktop" class="nav-item active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors text-left">
+                <i class="fas fa-chart-pie w-5 text-center text-lg"></i>
+                <span>Ringkasan</span>
+            </button>
+            <button onclick="navigate('barang')" id="nav-barang-desktop" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors text-left">
+                <i class="fas fa-box-open w-5 text-center text-lg"></i>
+                <span>Barang Impian</span>
+            </button>
+            <button onclick="navigate('tempat')" id="nav-tempat-desktop" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors text-left">
+                <i class="fas fa-map-marked-alt w-5 text-center text-lg"></i>
+                <span>Tempat Tujuan</span>
+            </button>
+        </nav>
+        
+        <div class="p-4 border-t border-slate-100">
+            <div class="bg-blue-50 rounded-xl p-4 text-sm">
+                <p class="font-semibold text-blue-800 mb-1">Tetap Semangat! 🚀</p>
+                <p class="text-blue-600 text-xs">Wujudkan mimpimu satu per satu.</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 h-full overflow-hidden flex flex-col bg-slate-50 relative pb-16 md:pb-0">
+        
+        <!-- Header Mobile -->
+        <header class="md:hidden bg-white px-5 py-4 border-b border-slate-200 flex justify-between items-center z-10 sticky top-0 shadow-sm">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-star text-blue-600 text-xl"></i>
+                <h1 class="text-lg font-bold text-slate-900">Wishlist<span class="text-blue-600">Pro</span></h1>
+            </div>
+            <div class="text-xs px-2 py-1 bg-slate-100 rounded-md text-slate-600 font-medium" id="user-status-mobile">
+                <i class="fas fa-wifi text-emerald-500"></i> Offline
+            </div>
+        </header>
+
+        <!-- Page Content Scrollable -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth" id="main-scroll-area">
+            
+            <!-- Dashboard Page -->
+            <div id="page-dashboard" class="page-section block max-w-5xl mx-auto space-y-6">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6">Ringkasan Anda</h2>
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full group-hover:scale-110 transition-transform"></div>
+                        <div class="relative z-10">
+                            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl mb-4">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <p class="text-slate-500 text-sm font-medium mb-1">Total Budget Diperlukan</p>
+                            <h3 class="text-2xl md:text-3xl font-bold text-slate-800" id="stat-total-budget">Rp 0</h3>
+                            <p class="text-xs text-slate-400 mt-2" id="stat-budget-detail">0 barang belum terbeli</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full group-hover:scale-110 transition-transform"></div>
+                        <div class="relative z-10">
+                            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-xl mb-4">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <p class="text-slate-500 text-sm font-medium mb-1">Barang Terbeli</p>
+                            <h3 class="text-2xl md:text-3xl font-bold text-slate-800" id="stat-items-bought">0 <span class="text-lg text-slate-400 font-medium">/ 0</span></h3>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5 mt-3">
+                                <div class="bg-emerald-500 h-1.5 rounded-full" id="progress-items" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group">
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-teal-50 rounded-full group-hover:scale-110 transition-transform"></div>
+                        <div class="relative z-10">
+                            <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center text-xl mb-4">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <p class="text-slate-500 text-sm font-medium mb-1">Tempat Dikunjungi</p>
+                            <h3 class="text-2xl md:text-3xl font-bold text-slate-800" id="stat-places-visited">0 <span class="text-lg text-slate-400 font-medium">/ 0</span></h3>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5 mt-3">
+                                <div class="bg-teal-500 h-1.5 rounded-full" id="progress-places" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Preview -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-800">Target Barang Terdekat</h3>
+                            <button onclick="navigate('barang')" class="text-sm text-blue-600 hover:underline">Lihat Semua</button>
+                        </div>
+                        <div id="recent-items-list" class="space-y-3">
+                            <p class="text-sm text-slate-500 text-center py-4">Memuat data...</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-800">Rencana Perjalanan</h3>
+                            <button onclick="navigate('tempat')" class="text-sm text-blue-600 hover:underline">Lihat Semua</button>
+                        </div>
+                        <div id="recent-places-list" class="space-y-3">
+                            <p class="text-sm text-slate-500 text-center py-4">Memuat data...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barang Page -->
+            <div id="page-barang" class="page-section hidden max-w-5xl mx-auto space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Wishlist Barang</h2>
+                        <p class="text-slate-500 text-sm mt-1">Daftar barang impian yang ingin kamu beli.</p>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <select id="filter-barang" class="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 outline-none w-full sm:w-auto shadow-sm">
+                            <option value="all">Semua Status</option>
+                            <option value="active">Belum Dibeli</option>
+                            <option value="completed">Sudah Dibeli</option>
+                        </select>
+                        <button onclick="openModal('barang')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md shadow-blue-200 transition-colors flex items-center justify-center gap-2 whitespace-nowrap">
+                            <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah Barang</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="list-barang-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Items will be rendered here -->
+                    <div class="col-span-full p-10 text-center">
+                        <i class="fas fa-spinner fa-spin text-3xl text-slate-300 mb-3"></i>
+                        <p class="text-slate-500">Memuat data barang...</p>
+                    </div>
+                </div>
+                
+                <!-- Floating Action Button for Mobile -->
+                <button onclick="openModal('barang')" class="md:hidden fixed bottom-20 right-5 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg shadow-blue-300 flex items-center justify-center text-xl z-30 hover:bg-blue-700 transition-transform active:scale-95">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- Tempat Page -->
+            <div id="page-tempat" class="page-section hidden max-w-5xl mx-auto space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Wishlist Tempat</h2>
+                        <p class="text-slate-500 text-sm mt-1">Destinasi wisata atau tempat yang ingin dikunjungi.</p>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <select id="filter-tempat" class="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block p-2 outline-none w-full sm:w-auto shadow-sm">
+                            <option value="all">Semua Status</option>
+                            <option value="active">Belum Dikunjungi</option>
+                            <option value="completed">Sudah Dikunjungi</option>
+                        </select>
+                        <button onclick="openModal('tempat')" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md shadow-teal-200 transition-colors flex items-center justify-center gap-2 whitespace-nowrap">
+                            <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah Tempat</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="list-tempat-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Places will be rendered here -->
+                    <div class="col-span-full p-10 text-center">
+                        <i class="fas fa-spinner fa-spin text-3xl text-slate-300 mb-3"></i>
+                        <p class="text-slate-500">Memuat data tempat...</p>
+                    </div>
+                </div>
+
+                <!-- Floating Action Button for Mobile -->
+                <button onclick="openModal('tempat')" class="md:hidden fixed bottom-20 right-5 w-14 h-14 bg-teal-600 text-white rounded-full shadow-lg shadow-teal-300 flex items-center justify-center text-xl z-30 hover:bg-teal-700 transition-transform active:scale-95">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            
+            <!-- Spacer for mobile bottom nav -->
+            <div class="h-8 md:hidden"></div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="md:hidden bg-white border-t border-slate-200 fixed bottom-0 w-full z-20 pb-safe">
+        <div class="flex justify-around items-center h-16 px-2">
+            <button onclick="navigate('dashboard')" id="nav-dashboard-mobile" class="nav-item-mobile active flex flex-col items-center justify-center w-full text-slate-500 transition-colors">
+                <div class="nav-icon-wrapper transition-all duration-200 flex flex-col items-center">
+                    <i class="fas fa-chart-pie text-lg mb-1"></i>
+                </div>
+                <span class="text-[10px] font-medium mt-0.5">Ringkasan</span>
+            </button>
+            <button onclick="navigate('barang')" id="nav-barang-mobile" class="nav-item-mobile flex flex-col items-center justify-center w-full text-slate-500 transition-colors">
+                <div class="nav-icon-wrapper transition-all duration-200 flex flex-col items-center">
+                    <i class="fas fa-box-open text-lg mb-1"></i>
+                </div>
+                <span class="text-[10px] font-medium mt-0.5">Barang</span>
+            </button>
+            <button onclick="navigate('tempat')" id="nav-tempat-mobile" class="nav-item-mobile flex flex-col items-center justify-center w-full text-slate-500 transition-colors">
+                <div class="nav-icon-wrapper transition-all duration-200 flex flex-col items-center">
+                    <i class="fas fa-map-marked-alt text-lg mb-1"></i>
+                </div>
+                <span class="text-[10px] font-medium mt-0.5">Tempat</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Modals Backdrop -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/50 z-40 hidden backdrop-blur-sm transition-opacity opacity-0"></div>
+
+    <!-- Modal Form Barang -->
+    <div id="modal-barang" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden pointer-events-none">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md modal-enter pointer-events-auto flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center p-5 border-b border-slate-100">
+                <h3 class="text-lg font-bold text-slate-800" id="modal-barang-title">Tambah Barang Baru</h3>
+                <button onclick="closeModal('barang')" class="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-1">
+                <form id="form-barang" class="space-y-4">
+                    <input type="hidden" id="barang-id">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Barang <span class="text-red-500">*</span></label>
+                        <input type="text" id="barang-nama" required placeholder="Contoh: Laptop Gaming" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Estimasi Harga (Rp) <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-2.5 text-slate-500 text-sm font-medium">Rp</span>
+                            <input type="number" id="barang-harga" required placeholder="0" min="0" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Prioritas</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="barang-prioritas" value="low" class="peer sr-only" checked>
+                                <div class="text-center px-2 py-2 rounded-lg border border-slate-200 text-slate-500 peer-checked:bg-slate-800 peer-checked:text-white peer-checked:border-slate-800 text-sm font-medium transition-colors">Rendah</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="barang-prioritas" value="medium" class="peer sr-only">
+                                <div class="text-center px-2 py-2 rounded-lg border border-slate-200 text-slate-500 peer-checked:bg-yellow-500 peer-checked:text-white peer-checked:border-yellow-500 text-sm font-medium transition-colors">Sedang</div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="barang-prioritas" value="high" class="peer sr-only">
+                                <div class="text-center px-2 py-2 rounded-lg border border-slate-200 text-slate-500 peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 text-sm font-medium transition-colors">Tinggi</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Link Pembelian (Opsional)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-slate-400"><i class="fas fa-link"></i></span>
+                            <input type="url" id="barang-link" placeholder="https://tokopedia.com/..." class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="p-5 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl">
+                <button type="submit" form="form-barang" id="btn-save-barang" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold shadow-md shadow-blue-200 transition-colors flex justify-center items-center gap-2">
+                    <i class="fas fa-save"></i> Simpan Barang
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Form Tempat -->
+    <div id="modal-tempat" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden pointer-events-none">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md modal-enter pointer-events-auto flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center p-5 border-b border-slate-100">
+                <h3 class="text-lg font-bold text-slate-800" id="modal-tempat-title">Tambah Tempat Tujuan</h3>
+                <button onclick="closeModal('tempat')" class="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-1">
+                <form id="form-tempat" class="space-y-4">
+                    <input type="hidden" id="tempat-id">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Tempat / Destinasi <span class="text-red-500">*</span></label>
+                        <input type="text" id="tempat-nama" required placeholder="Contoh: Labuan Bajo" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-sm">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Detail Lokasi <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-slate-400"><i class="fas fa-map-marker-alt"></i></span>
+                            <input type="text" id="tempat-lokasi" required placeholder="Contoh: Nusa Tenggara Timur" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Target Berangkat (Opsional)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-slate-400"><i class="far fa-calendar-alt"></i></span>
+                            <input type="date" id="tempat-tanggal" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-sm text-slate-700">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="p-5 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl">
+                <button type="submit" form="form-tempat" id="btn-save-tempat" class="w-full bg-teal-600 hover:bg-teal-700 text-white px-4 py-3 rounded-xl font-semibold shadow-md shadow-teal-200 transition-colors flex justify-center items-center gap-2">
+                    <i class="fas fa-save"></i> Simpan Destinasi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 md:bottom-4 md:top-auto z-[60] flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // Local Storage Keys
+        const STORAGE_KEY_ITEMS = 'wishlist_pro_items';
+        const STORAGE_KEY_PLACES = 'wishlist_pro_places';
+        
+        // Global State
+        let globalItems = [];
+        let globalPlaces = [];
+        let currentFilterBarang = 'all';
+        let currentFilterTempat = 'all';
+
+        // Helper to generate unique ID
+        const generateId = () => '_' + Math.random().toString(36).substr(2, 9);
+
+        // Formatters
+        const formatRupiah = (angka) => {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        };
+        const formatDate = (dateString) => {
+            if(!dateString) return '-';
+            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('id-ID', options);
+        };
+
+        window.showToast = (message, type = 'success') => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const colorConfig = {
+                success: { bg: 'bg-emerald-600', icon: 'fa-check-circle' },
+                error: { bg: 'bg-red-600', icon: 'fa-exclamation-circle' },
+                info: { bg: 'bg-blue-600', icon: 'fa-info-circle' }
+            };
+            const config = colorConfig[type] || colorConfig.info;
+            
+            toast.className = `${config.bg} text-white px-4 py-3 rounded-xl shadow-lg shadow-slate-200/50 flex items-center gap-3 toast-enter toast-enter-active max-w-sm pointer-events-auto text-sm font-medium`;
+            toast.innerHTML = `<i class="fas ${config.icon}"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('toast-enter', 'toast-enter-active');
+                toast.classList.add('toast-exit-active');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        window.navigate = (pageId) => {
+            ['dashboard', 'barang', 'tempat'].forEach(id => {
+                document.getElementById(`nav-${id}-desktop`).classList.remove('active', 'bg-blue-50', 'text-blue-600');
+                document.getElementById(`nav-${id}-desktop`).classList.add('text-slate-600');
+                document.getElementById(`nav-${id}-mobile`).classList.remove('active');
+                document.getElementById(`page-${id}`).classList.remove('block');
+                document.getElementById(`page-${id}`).classList.add('hidden');
+            });
+
+            document.getElementById(`nav-${pageId}-desktop`).classList.add('active', 'bg-blue-50', 'text-blue-600');
+            document.getElementById(`nav-${pageId}-desktop`).classList.remove('text-slate-600');
+            document.getElementById(`nav-${pageId}-mobile`).classList.add('active');
+            document.getElementById(`page-${pageId}`).classList.remove('hidden');
+            document.getElementById(`page-${pageId}`).classList.add('block');
+            document.getElementById('main-scroll-area').scrollTop = 0;
+        };
+
+        window.openModal = (type, id = null) => {
+            const backdrop = document.getElementById('modal-backdrop');
+            const modal = document.getElementById(`modal-${type}`);
+            const form = document.getElementById(`form-${type}`);
+            
+            form.reset();
+            document.getElementById(`${type}-id`).value = ''; 
+            
+            if (type === 'barang') {
+                document.getElementById('modal-barang-title').innerText = id ? 'Edit Barang' : 'Tambah Barang Baru';
+                document.getElementById('btn-save-barang').innerHTML = id ? '<i class="fas fa-save"></i> Simpan Perubahan' : '<i class="fas fa-plus"></i> Tambah Barang';
+                if (id) {
+                    const item = globalItems.find(i => i.id === id);
+                    if (item) {
+                        document.getElementById('barang-id').value = item.id;
+                        document.getElementById('barang-nama').value = item.name;
+                        document.getElementById('barang-harga').value = item.price;
+                        document.getElementById('barang-link').value = item.link || '';
+                        document.querySelector(`input[name="barang-prioritas"][value="${item.priority || 'low'}"]`).checked = true;
+                    }
+                }
+            } else if (type === 'tempat') {
+                document.getElementById('modal-tempat-title').innerText = id ? 'Edit Tempat' : 'Tambah Tempat Baru';
+                document.getElementById('btn-save-tempat').innerHTML = id ? '<i class="fas fa-save"></i> Simpan Perubahan' : '<i class="fas fa-plus"></i> Tambah Tempat';
+                if (id) {
+                    const place = globalPlaces.find(p => p.id === id);
+                    if (place) {
+                        document.getElementById('tempat-id').value = place.id;
+                        document.getElementById('tempat-nama').value = place.name;
+                        document.getElementById('tempat-lokasi').value = place.location;
+                        document.getElementById('tempat-tanggal').value = place.targetDate || '';
+                    }
+                }
+            }
+
+            backdrop.classList.remove('hidden');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                modal.querySelector('.modal-enter').classList.add('modal-enter-active');
+            }, 10);
+        };
+
+        window.closeModal = (type) => {
+            const backdrop = document.getElementById('modal-backdrop');
+            const modal = document.getElementById(`modal-${type}`);
+            const modalContent = modal.querySelector('.modal-enter');
+            
+            backdrop.classList.add('opacity-0');
+            modalContent.classList.remove('modal-enter-active');
+            modalContent.classList.add('modal-exit-active');
+            
+            setTimeout(() => {
+                backdrop.classList.add('hidden');
+                modal.classList.add('hidden');
+                modalContent.classList.remove('modal-exit-active');
+            }, 200); 
+        };
+
+        // Filter Handlers
+        document.getElementById('filter-barang').addEventListener('change', (e) => {
+            currentFilterBarang = e.target.value;
+            renderBarang();
+        });
+        document.getElementById('filter-tempat').addEventListener('change', (e) => {
+            currentFilterTempat = e.target.value;
+            renderTempat();
+        });
+
+        function loadData() {
+            const storedItems = localStorage.getItem(STORAGE_KEY_ITEMS);
+            if (storedItems) {
+                globalItems = JSON.parse(storedItems);
+            }
+            
+            const storedPlaces = localStorage.getItem(STORAGE_KEY_PLACES);
+            if (storedPlaces) {
+                globalPlaces = JSON.parse(storedPlaces);
+            }
+
+            // Sort by createdAt descending
+            globalItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            globalPlaces.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+            renderBarang();
+            renderTempat();
+            updateDashboard();
+        }
+
+        function saveData(type) {
+            if (type === 'items' || type === 'all') {
+                localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(globalItems));
+                renderBarang();
+            }
+            if (type === 'places' || type === 'all') {
+                localStorage.setItem(STORAGE_KEY_PLACES, JSON.stringify(globalPlaces));
+                renderTempat();
+            }
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            // Calculate Items Stats
+            const totalItems = globalItems.length;
+            const boughtItems = globalItems.filter(i => i.completed).length;
+            const itemsProgress = totalItems === 0 ? 0 : Math.round((boughtItems / totalItems) * 100);
+            let neededBudget = 0;
+            let activeItemsCount = 0;
+            
+            globalItems.forEach(item => {
+                if (!item.completed) {
+                    neededBudget += Number(item.price);
+                    activeItemsCount++;
+                }
+            });
+
+            document.getElementById('stat-total-budget').innerText = formatRupiah(neededBudget);
+            document.getElementById('stat-budget-detail').innerText = `${activeItemsCount} barang belum terbeli`;
+            document.getElementById('stat-items-bought').innerHTML = `${boughtItems} <span class="text-lg text-slate-400 font-medium">/ ${totalItems}</span>`;
+            document.getElementById('progress-items').style.width = `${itemsProgress}%`;
+
+            // Calculate Places Stats
+            const totalPlaces = globalPlaces.length;
+            const visitedPlaces = globalPlaces.filter(p => p.visited).length;
+            const placesProgress = totalPlaces === 0 ? 0 : Math.round((visitedPlaces / totalPlaces) * 100);
+
+            document.getElementById('stat-places-visited').innerHTML = `${visitedPlaces} <span class="text-lg text-slate-400 font-medium">/ ${totalPlaces}</span>`;
+            document.getElementById('progress-places').style.width = `${placesProgress}%`;
+
+            // Update Recent Preview Lists 
+            const recentItemsContainer = document.getElementById('recent-items-list');
+            const topItems = globalItems.filter(i => !i.completed).slice(0, 3);
+            if(topItems.length > 0) {
+                recentItemsContainer.innerHTML = topItems.map(item => `
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <div class="w-2 h-2 rounded-full ${getPriorityColor(item.priority, true)} flex-shrink-0"></div>
+                            <span class="text-sm font-semibold text-slate-700 truncate">${item.name}</span>
+                        </div>
+                        <span class="text-sm font-bold text-blue-600 flex-shrink-0 ml-2">${formatRupiah(item.price)}</span>
+                    </div>
+                `).join('');
+            } else {
+                recentItemsContainer.innerHTML = `<p class="text-sm text-slate-400 italic text-center py-2">Semua target barang sudah terpenuhi! 🎉</p>`;
+            }
+
+            const recentPlacesContainer = document.getElementById('recent-places-list');
+            const topPlaces = globalPlaces.filter(p => !p.visited).slice(0, 3);
+            if(topPlaces.length > 0) {
+                recentPlacesContainer.innerHTML = topPlaces.map(place => `
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div class="flex flex-col overflow-hidden">
+                            <span class="text-sm font-semibold text-slate-700 truncate">${place.name}</span>
+                            <span class="text-xs text-slate-500 truncate"><i class="fas fa-map-pin text-teal-400 mr-1"></i> ${place.location}</span>
+                        </div>
+                        ${place.targetDate ? `<span class="text-[10px] font-medium bg-white px-2 py-1 rounded-md border border-slate-200 text-slate-500 flex-shrink-0 ml-2 whitespace-nowrap">${formatDate(place.targetDate)}</span>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                recentPlacesContainer.innerHTML = `<p class="text-sm text-slate-400 italic text-center py-2">Belum ada destinasi tujuan baru. 🏖️</p>`;
+            }
+        }
+
+        function getPriorityColor(priority, bgOnly = false) {
+            if(priority === 'high') return bgOnly ? 'bg-red-500' : 'bg-red-100 text-red-600';
+            if(priority === 'medium') return bgOnly ? 'bg-yellow-500' : 'bg-yellow-100 text-yellow-600';
+            return bgOnly ? 'bg-slate-400' : 'bg-slate-100 text-slate-600'; 
+        }
+        function getPriorityLabel(priority) {
+            if(priority === 'high') return 'Tinggi';
+            if(priority === 'medium') return 'Sedang';
+            return 'Rendah';
+        }
+
+        function renderBarang() {
+            const container = document.getElementById('list-barang-container');
+            let filtered = globalItems;
+            
+            if(currentFilterBarang === 'active') filtered = globalItems.filter(i => !i.completed);
+            else if(currentFilterBarang === 'completed') filtered = globalItems.filter(i => i.completed);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-16 px-4 text-center">
+                        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-box-open text-3xl text-blue-300"></i>
+                        </div>
+                        <h3 class="text-slate-700 font-semibold mb-1">Data Kosong</h3>
+                        <p class="text-slate-500 text-sm">Tidak ada barang yang sesuai dengan filter saat ini.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => `
+                <div class="bg-white rounded-2xl p-5 shadow-sm border ${item.completed ? 'border-emerald-100 bg-slate-50/50' : 'border-slate-100 hover:shadow-md'} transition-all relative group flex flex-col h-full">
+                    
+                    ${item.completed ? `<div class="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-2xl tracking-wide shadow-sm z-10"><i class="fas fa-check mr-1"></i> DIBELI</div>` : ''}
+                    
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-1 pr-16">
+                            <h4 class="font-bold text-lg ${item.completed ? 'text-slate-500 line-through' : 'text-slate-800'} line-clamp-2 leading-tight">${item.name}</h4>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4 mt-2">
+                            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md ${getPriorityColor(item.priority)}">
+                                Prioritas ${getPriorityLabel(item.priority)}
+                            </span>
+                            ${item.link ? `<a href="${item.link}" target="_blank" class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors inline-flex items-center gap-1"><i class="fas fa-external-link-alt"></i> Link Toko</a>` : ''}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <p class="text-xs text-slate-400 mb-0.5">Estimasi Harga</p>
+                            <p class="text-xl font-bold ${item.completed ? 'text-slate-400' : 'text-blue-600'}">${formatRupiah(item.price)}</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 flex gap-2">
+                        <button onclick="toggleStatus('${item.id}', 'items', ${item.completed})" class="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${item.completed ? 'bg-slate-200 text-slate-600 hover:bg-slate-300' : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm'}">
+                            ${item.completed ? '<i class="fas fa-undo"></i> Batal' : '<i class="fas fa-check"></i> Sudah Beli'}
+                        </button>
+                        <button onclick="openModal('barang', '${item.id}')" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors flex items-center justify-center">
+                            <i class="fas fa-pen text-sm"></i>
+                        </button>
+                        <button onclick="deleteData('${item.id}', 'items')" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors flex items-center justify-center">
+                            <i class="fas fa-trash-alt text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTempat() {
+            const container = document.getElementById('list-tempat-container');
+            let filtered = globalPlaces;
+            
+            if(currentFilterTempat === 'active') filtered = globalPlaces.filter(i => !i.visited);
+            else if(currentFilterTempat === 'completed') filtered = globalPlaces.filter(i => i.visited);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-16 px-4 text-center">
+                        <div class="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-map-marked-alt text-3xl text-teal-300"></i>
+                        </div>
+                        <h3 class="text-slate-700 font-semibold mb-1">Data Kosong</h3>
+                        <p class="text-slate-500 text-sm">Belum ada tempat impian yang sesuai.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(place => `
+                <div class="bg-white rounded-2xl p-5 shadow-sm border ${place.visited ? 'border-teal-100 bg-slate-50/50' : 'border-slate-100 hover:shadow-md'} transition-all relative flex flex-col h-full">
+                    
+                    ${place.visited ? `<div class="absolute top-0 right-0 bg-teal-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-2xl tracking-wide shadow-sm z-10"><i class="fas fa-flag mr-1"></i> DIKUNJUNGI</div>` : ''}
+                    
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-2 pr-20">
+                            <h4 class="font-bold text-lg ${place.visited ? 'text-slate-500 line-through' : 'text-slate-800'} line-clamp-2">${place.name}</h4>
+                        </div>
+                        
+                        <div class="space-y-2 mb-4">
+                            <p class="text-sm text-slate-600 flex items-start gap-2">
+                                <i class="fas fa-map-pin text-teal-500 mt-1 w-4 text-center"></i> 
+                                <span class="flex-1 leading-snug">${place.location}</span>
+                            </p>
+                            ${place.targetDate ? `
+                            <p class="text-sm text-slate-600 flex items-center gap-2">
+                                <i class="far fa-calendar-alt text-orange-400 w-4 text-center"></i> 
+                                <span class="font-medium">${formatDate(place.targetDate)}</span>
+                            </p>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 flex gap-2">
+                        <button onclick="toggleStatus('${place.id}', 'places', ${place.visited})" class="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${place.visited ? 'bg-slate-200 text-slate-600 hover:bg-slate-300' : 'bg-teal-500 text-white hover:bg-teal-600 shadow-sm'}">
+                            ${place.visited ? '<i class="fas fa-undo"></i> Batal' : '<i class="fas fa-check-circle"></i> Selesai'}
+                        </button>
+                        <button onclick="openModal('tempat', '${place.id}')" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors flex items-center justify-center">
+                            <i class="fas fa-pen text-sm"></i>
+                        </button>
+                        <button onclick="deleteData('${place.id}', 'places')" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors flex items-center justify-center">
+                            <i class="fas fa-trash-alt text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.toggleStatus = (id, type, currentStatus) => {
+            if (type === 'items') {
+                const index = globalItems.findIndex(i => i.id === id);
+                if (index > -1) {
+                    globalItems[index].completed = !currentStatus;
+                    globalItems[index].updatedAt = Date.now();
+                    saveData('items');
+                    showToast(currentStatus ? "Barang dikembalikan ke wishlist." : "Hore! Barang berhasil dibeli! 🎉");
+                }
+            } else {
+                const index = globalPlaces.findIndex(p => p.id === id);
+                if (index > -1) {
+                    globalPlaces[index].visited = !currentStatus;
+                    globalPlaces[index].updatedAt = Date.now();
+                    saveData('places');
+                    showToast(currentStatus ? "Tempat dikembalikan ke wishlist." : "Mantap! Destinasi tercapai! ✈️");
+                }
+            }
+        };
+
+        window.deleteData = (id, type) => {
+            if (type === 'items') {
+                globalItems = globalItems.filter(i => i.id !== id);
+                saveData('items');
+            } else {
+                globalPlaces = globalPlaces.filter(p => p.id !== id);
+                saveData('places');
+            }
+            showToast("Data berhasil dihapus.", "success");
+        };
+
+        document.getElementById('form-barang').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('btn-save-barang');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyimpan...`;
+            btn.disabled = true;
+
+            // setTimeout for simple UX loading simulation
+            setTimeout(() => {
+                const id = document.getElementById('barang-id').value;
+                const data = {
+                    name: document.getElementById('barang-nama').value,
+                    price: Number(document.getElementById('barang-harga').value),
+                    priority: document.querySelector('input[name="barang-prioritas"]:checked').value,
+                    link: document.getElementById('barang-link').value,
+                    updatedAt: Date.now()
+                };
+
+                if (id) {
+                    const index = globalItems.findIndex(i => i.id === id);
+                    if (index > -1) {
+                        globalItems[index] = { ...globalItems[index], ...data };
+                    }
+                    showToast("Perubahan barang disimpan!");
+                } else {
+                    data.id = generateId();
+                    data.completed = false;
+                    data.createdAt = Date.now();
+                    globalItems.unshift(data); // Add to beginning
+                    showToast("Barang baru ditambahkan!");
+                }
+                
+                saveData('items');
+                closeModal('barang');
+                
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 300);
+        });
+
+        document.getElementById('form-tempat').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('btn-save-tempat');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyimpan...`;
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const id = document.getElementById('tempat-id').value;
+                const data = {
+                    name: document.getElementById('tempat-nama').value,
+                    location: document.getElementById('tempat-lokasi').value,
+                    targetDate: document.getElementById('tempat-tanggal').value,
+                    updatedAt: Date.now()
+                };
+
+                if (id) {
+                    const index = globalPlaces.findIndex(p => p.id === id);
+                    if (index > -1) {
+                        globalPlaces[index] = { ...globalPlaces[index], ...data };
+                    }
+                    showToast("Perubahan tempat disimpan!");
+                } else {
+                    data.id = generateId();
+                    data.visited = false;
+                    data.createdAt = Date.now();
+                    globalPlaces.unshift(data); // Add to beginning
+                    showToast("Tempat baru ditambahkan!");
+                }
+                
+                saveData('places');
+                closeModal('tempat');
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 300);
+        });
+
+        // Initialize on load
+        window.onload = loadData;
+
+    </script>
+</body>
+</html>
