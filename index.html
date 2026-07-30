@@ -2,941 +2,816 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wishlist Pro Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist Pro & Student Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #f8fafc;
-            -webkit-tap-highlight-color: transparent;
-        }
-        /* Custom scrollbar */
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        
+        /* Hide scrollbar for a cleaner look */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Nav active states */
-        .nav-item.active {
-            background-color: #eff6ff;
-            color: #2563eb;
-            font-weight: 600;
-        }
-        .nav-item-mobile.active {
-            color: #2563eb;
-        }
-        .nav-item-mobile.active .nav-icon-wrapper {
-            background-color: #eff6ff;
-            padding: 4px 16px;
-            border-radius: 9999px;
-        }
+        .nav-item.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; border-right: 3px solid #2563eb; }
+        .nav-item-mobile.active { color: #2563eb; font-weight: 600; }
+        
+        /* Modal Transitions */
+        .modal { opacity: 0; pointer-events: none; transition: all 0.3s ease; }
+        .modal.show { opacity: 1; pointer-events: auto; }
+        .modal-content { transform: scale(0.95); transition: all 0.3s ease; }
+        .modal.show .modal-content { transform: scale(1); }
 
-        /* Modal transitions */
-        .modal-enter { opacity: 0; transform: scale(0.95); }
-        .modal-enter-active { opacity: 1; transform: scale(1); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .modal-exit { opacity: 1; transform: scale(1); }
-        .modal-exit-active { opacity: 0; transform: scale(0.95); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        /* Toast animations */
-        .toast-enter { transform: translateY(100%); opacity: 0; }
-        .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.3s ease-out; }
-        .toast-exit-active { transform: translateY(100%); opacity: 0; transition: all 0.3s ease-in; }
-
-        /* Hide number input spinners */
-        input[type="number"]::-webkit-inner-spin-button, 
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type="number"] { -moz-appearance: textfield; }
+        .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        /* Floating Button for Mobile */
+        .fab { box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4); }
     </style>
 </head>
-<body class="text-slate-800 h-screen overflow-hidden flex flex-col md:flex-row">
+<body class="text-slate-800 antialiased h-screen flex overflow-hidden">
 
     <!-- Sidebar (Desktop) -->
-    <aside class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 h-full z-20 shadow-sm relative">
-        <div class="p-6 flex items-center gap-3 border-b border-slate-100">
-            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl shadow-blue-200 shadow-lg">
-                <i class="fas fa-star"></i>
+    <aside class="hidden md:flex w-64 bg-white border-r border-slate-200 flex-col justify-between h-full z-20">
+        <div>
+            <div class="h-16 flex items-center px-6 border-b border-slate-100">
+                <h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
+                    <i class="fas fa-layer-group text-blue-600"></i> Wishlist Pro
+                </h1>
             </div>
-            <div>
-                <h1 class="text-xl font-bold text-slate-900 leading-tight">Wishlist<span class="text-blue-600">Pro</span></h1>
-                <p class="text-xs text-slate-500 font-medium" id="user-status-desktop"><i class="fas fa-wifi text-emerald-500"></i> Offline Mode</p>
-            </div>
+            <nav class="p-4 space-y-1">
+                <button onclick="navigate('dashboard')" id="nav-desktop-dashboard" class="nav-item active w-full flex items-center gap-3 px-4 py-3 text-sm rounded-xl text-slate-500 hover:bg-slate-50 transition-colors text-left">
+                    <i class="fas fa-home w-5"></i> Dashboard
+                </button>
+                <div class="pt-4 pb-2 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Koleksi Pribadi</div>
+                <button onclick="navigate('barang')" id="nav-desktop-barang" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm rounded-xl text-slate-500 hover:bg-slate-50 transition-colors text-left">
+                    <i class="fas fa-shopping-bag w-5"></i> Wishlist Barang
+                </button>
+                <button onclick="navigate('tempat')" id="nav-desktop-tempat" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm rounded-xl text-slate-500 hover:bg-slate-50 transition-colors text-left">
+                    <i class="fas fa-map-marked-alt w-5"></i> Destinasi Tempat
+                </button>
+                <div class="pt-4 pb-2 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Produktivitas</div>
+                <button onclick="navigate('tugas')" id="nav-desktop-tugas" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm rounded-xl text-slate-500 hover:bg-slate-50 transition-colors text-left">
+                    <i class="fas fa-tasks w-5"></i> Jadwal Tugas
+                </button>
+                <button onclick="navigate('catatan')" id="nav-desktop-catatan" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm rounded-xl text-slate-500 hover:bg-slate-50 transition-colors text-left">
+                    <i class="fas fa-sticky-note w-5"></i> Catatan Kuliah
+                </button>
+            </nav>
         </div>
-        
-        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            <button onclick="navigate('dashboard')" id="nav-dashboard-desktop" class="nav-item active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors text-left">
-                <i class="fas fa-chart-pie w-5 text-center text-lg"></i>
-                <span>Ringkasan</span>
-            </button>
-            <button onclick="navigate('barang')" id="nav-barang-desktop" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors text-left">
-                <i class="fas fa-box-open w-5 text-center text-lg"></i>
-                <span>Barang Impian</span>
-            </button>
-            <button onclick="navigate('tempat')" id="nav-tempat-desktop" class="nav-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors text-left">
-                <i class="fas fa-map-marked-alt w-5 text-center text-lg"></i>
-                <span>Tempat Tujuan</span>
-            </button>
-        </nav>
-        
-        <div class="p-4 border-t border-slate-100">
-            <div class="bg-blue-50 rounded-xl p-4 text-sm">
-                <p class="font-semibold text-blue-800 mb-1">Tetap Semangat! 🚀</p>
-                <p class="text-blue-600 text-xs">Wujudkan mimpimu satu per satu.</p>
+        <div class="p-4">
+            <div class="bg-indigo-50 rounded-xl p-4 flex items-center gap-3 border border-indigo-100">
+                <div class="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center text-indigo-700 font-bold">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-indigo-900">Mode Offline</p>
+                    <p class="text-[10px] text-indigo-600">Sangat Cepat & Aman</p>
+                </div>
             </div>
         </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 h-full overflow-hidden flex flex-col bg-slate-50 relative pb-16 md:pb-0">
+    <main class="flex-1 flex flex-col h-full relative">
         
         <!-- Header Mobile -->
-        <header class="md:hidden bg-white px-5 py-4 border-b border-slate-200 flex justify-between items-center z-10 sticky top-0 shadow-sm">
-            <div class="flex items-center gap-2">
-                <i class="fas fa-star text-blue-600 text-xl"></i>
-                <h1 class="text-lg font-bold text-slate-900">Wishlist<span class="text-blue-600">Pro</span></h1>
-            </div>
-            <div class="text-xs px-2 py-1 bg-slate-100 rounded-md text-slate-600 font-medium" id="user-status-mobile">
-                <i class="fas fa-wifi text-emerald-500"></i> Offline
+        <header class="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-10">
+            <h1 class="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
+                <i class="fas fa-layer-group text-blue-600"></i> Wishlist Pro
+            </h1>
+            <div class="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+                <i class="fas fa-bolt text-xs"></i>
             </div>
         </header>
 
-        <!-- Page Content Scrollable -->
-        <div class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth" id="main-scroll-area">
+        <!-- Pages Container -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
             
             <!-- Dashboard Page -->
-            <div id="page-dashboard" class="page-section block max-w-5xl mx-auto space-y-6">
-                <h2 class="text-2xl font-bold text-slate-800 mb-6">Ringkasan Anda</h2>
+            <div id="page-dashboard" class="page-section block animate-fade-in max-w-5xl mx-auto">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Halo, Selamat Datang! 👋</h2>
+                <p class="text-slate-500 mb-8">Berikut adalah ringkasan wishlist dan tugasmu hari ini.</p>
                 
-                <!-- Stats Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group">
-                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full group-hover:scale-110 transition-transform"></div>
-                        <div class="relative z-10">
-                            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center text-xl mb-4">
-                                <i class="fas fa-wallet"></i>
-                            </div>
-                            <p class="text-slate-500 text-sm font-medium mb-1">Total Budget Diperlukan</p>
-                            <h3 class="text-2xl md:text-3xl font-bold text-slate-800" id="stat-total-budget">Rp 0</h3>
-                            <p class="text-xs text-slate-400 mt-2" id="stat-budget-detail">0 barang belum terbeli</p>
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-xl shrink-0"><i class="fas fa-wallet"></i></div>
+                        <div>
+                            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Target Budget</p>
+                            <p class="text-lg font-bold text-slate-800" id="stat-budget">Rp 0</p>
                         </div>
                     </div>
-                    
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group">
-                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-50 rounded-full group-hover:scale-110 transition-transform"></div>
-                        <div class="relative z-10">
-                            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center text-xl mb-4">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <p class="text-slate-500 text-sm font-medium mb-1">Barang Terbeli</p>
-                            <h3 class="text-2xl md:text-3xl font-bold text-slate-800" id="stat-items-bought">0 <span class="text-lg text-slate-400 font-medium">/ 0</span></h3>
-                            <div class="w-full bg-slate-100 rounded-full h-1.5 mt-3">
-                                <div class="bg-emerald-500 h-1.5 rounded-full" id="progress-items" style="width: 0%"></div>
-                            </div>
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 text-xl shrink-0"><i class="fas fa-map-marked-alt"></i></div>
+                        <div>
+                            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Tempat Dikunjungi</p>
+                            <p class="text-lg font-bold text-slate-800" id="stat-tempat">0 / 0</p>
                         </div>
                     </div>
-                    
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group">
-                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-teal-50 rounded-full group-hover:scale-110 transition-transform"></div>
-                        <div class="relative z-10">
-                            <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center text-xl mb-4">
-                                <i class="fas fa-map-marker-alt"></i>
-                            </div>
-                            <p class="text-slate-500 text-sm font-medium mb-1">Tempat Dikunjungi</p>
-                            <h3 class="text-2xl md:text-3xl font-bold text-slate-800" id="stat-places-visited">0 <span class="text-lg text-slate-400 font-medium">/ 0</span></h3>
-                            <div class="w-full bg-slate-100 rounded-full h-1.5 mt-3">
-                                <div class="bg-teal-500 h-1.5 rounded-full" id="progress-places" style="width: 0%"></div>
-                            </div>
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 text-xl shrink-0"><i class="fas fa-check-circle"></i></div>
+                        <div>
+                            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Tugas Selesai</p>
+                            <p class="text-lg font-bold text-slate-800" id="stat-tugas">0 / 0</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Recent Activity Preview -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-slate-800">Target Barang Terdekat</h3>
-                            <button onclick="navigate('barang')" class="text-sm text-blue-600 hover:underline">Lihat Semua</button>
-                        </div>
-                        <div id="recent-items-list" class="space-y-3">
-                            <p class="text-sm text-slate-500 text-center py-4">Memuat data...</p>
-                        </div>
+                <!-- Urgent Tasks Alert Box -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-fire text-orange-500"></i> Tugas Mendesak</h3>
+                        <button onclick="navigate('tugas')" class="text-xs text-indigo-600 hover:underline font-medium">Lihat Semua</button>
                     </div>
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-slate-800">Rencana Perjalanan</h3>
-                            <button onclick="navigate('tempat')" class="text-sm text-blue-600 hover:underline">Lihat Semua</button>
+                    <div id="dash-urgent-tasks" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Content injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Recent Previews -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-800">Barang Impian Terbaru</h3>
+                            <button onclick="navigate('barang')" class="text-xs text-blue-600 hover:underline font-medium">Lihat Semua</button>
                         </div>
-                        <div id="recent-places-list" class="space-y-3">
-                            <p class="text-sm text-slate-500 text-center py-4">Memuat data...</p>
+                        <div id="dash-recent-barang" class="space-y-3"></div>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-800">Destinasi Terbaru</h3>
+                            <button onclick="navigate('tempat')" class="text-xs text-emerald-600 hover:underline font-medium">Lihat Semua</button>
                         </div>
+                        <div id="dash-recent-tempat" class="space-y-3"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Barang Page -->
-            <div id="page-barang" class="page-section hidden max-w-5xl mx-auto space-y-4">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+            <div id="page-barang" class="page-section hidden animate-fade-in max-w-5xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
                     <div>
                         <h2 class="text-2xl font-bold text-slate-800">Wishlist Barang</h2>
-                        <p class="text-slate-500 text-sm mt-1">Daftar barang impian yang ingin kamu beli.</p>
+                        <p class="text-sm text-slate-500 mt-1">Daftar barang impian yang ingin dibeli.</p>
                     </div>
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <select id="filter-barang" class="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 outline-none w-full sm:w-auto shadow-sm">
-                            <option value="all">Semua Status</option>
-                            <option value="active">Belum Dibeli</option>
-                            <option value="completed">Sudah Dibeli</option>
-                        </select>
-                        <button onclick="openModal('barang')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md shadow-blue-200 transition-colors flex items-center justify-center gap-2 whitespace-nowrap">
-                            <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah Barang</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div id="list-barang-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Items will be rendered here -->
-                    <div class="col-span-full p-10 text-center">
-                        <i class="fas fa-spinner fa-spin text-3xl text-slate-300 mb-3"></i>
-                        <p class="text-slate-500">Memuat data barang...</p>
-                    </div>
+                    <button onclick="openModal('barang')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm shadow-blue-200 transition-all flex items-center gap-2">
+                        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah Barang</span>
+                    </button>
                 </div>
                 
-                <!-- Floating Action Button for Mobile -->
-                <button onclick="openModal('barang')" class="md:hidden fixed bottom-20 right-5 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg shadow-blue-300 flex items-center justify-center text-xl z-30 hover:bg-blue-700 transition-transform active:scale-95">
-                    <i class="fas fa-plus"></i>
-                </button>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div id="list-barang" class="divide-y divide-slate-100"></div>
+                </div>
             </div>
 
             <!-- Tempat Page -->
-            <div id="page-tempat" class="page-section hidden max-w-5xl mx-auto space-y-4">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+            <div id="page-tempat" class="page-section hidden animate-fade-in max-w-5xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-800">Wishlist Tempat</h2>
-                        <p class="text-slate-500 text-sm mt-1">Destinasi wisata atau tempat yang ingin dikunjungi.</p>
+                        <h2 class="text-2xl font-bold text-slate-800">Destinasi Tempat</h2>
+                        <p class="text-sm text-slate-500 mt-1">Tempat liburan atau hangout incaran.</p>
                     </div>
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <select id="filter-tempat" class="bg-white border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block p-2 outline-none w-full sm:w-auto shadow-sm">
-                            <option value="all">Semua Status</option>
-                            <option value="active">Belum Dikunjungi</option>
-                            <option value="completed">Sudah Dikunjungi</option>
-                        </select>
-                        <button onclick="openModal('tempat')" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md shadow-teal-200 transition-colors flex items-center justify-center gap-2 whitespace-nowrap">
-                            <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah Tempat</span>
-                        </button>
-                    </div>
+                    <button onclick="openModal('tempat')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm shadow-emerald-200 transition-all flex items-center gap-2">
+                        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah Tempat</span>
+                    </button>
                 </div>
-
-                <div id="list-tempat-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Places will be rendered here -->
-                    <div class="col-span-full p-10 text-center">
-                        <i class="fas fa-spinner fa-spin text-3xl text-slate-300 mb-3"></i>
-                        <p class="text-slate-500">Memuat data tempat...</p>
-                    </div>
-                </div>
-
-                <!-- Floating Action Button for Mobile -->
-                <button onclick="openModal('tempat')" class="md:hidden fixed bottom-20 right-5 w-14 h-14 bg-teal-600 text-white rounded-full shadow-lg shadow-teal-300 flex items-center justify-center text-xl z-30 hover:bg-teal-700 transition-transform active:scale-95">
-                    <i class="fas fa-plus"></i>
-                </button>
+                
+                <div id="list-tempat" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
-            
-            <!-- Spacer for mobile bottom nav -->
-            <div class="h-8 md:hidden"></div>
+
+            <!-- Tugas Page -->
+            <div id="page-tugas" class="page-section hidden animate-fade-in max-w-5xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Jadwal Tugas</h2>
+                        <p class="text-sm text-slate-500 mt-1">Kelola tugas kuliah dan pantau deadline.</p>
+                    </div>
+                    <button onclick="openModal('tugas')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm shadow-indigo-200 transition-all flex items-center gap-2">
+                        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah Tugas</span>
+                    </button>
+                </div>
+                
+                <div id="list-tugas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </div>
+
+            <!-- Catatan Page -->
+            <div id="page-catatan" class="page-section hidden animate-fade-in max-w-5xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Catatan Kuliah</h2>
+                        <p class="text-sm text-slate-500 mt-1">Simpan ide, materi, atau link penting.</p>
+                    </div>
+                    <button onclick="openModal('catatan')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm shadow-yellow-200 transition-all flex items-center gap-2">
+                        <i class="fas fa-plus"></i> <span class="hidden sm:inline">Buat Catatan</span>
+                    </button>
+                </div>
+                
+                <div id="list-catatan" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+            </div>
+
         </div>
     </main>
 
     <!-- Bottom Navigation (Mobile) -->
-    <nav class="md:hidden bg-white border-t border-slate-200 fixed bottom-0 w-full z-20 pb-safe">
-        <div class="flex justify-around items-center h-16 px-2">
-            <button onclick="navigate('dashboard')" id="nav-dashboard-mobile" class="nav-item-mobile active flex flex-col items-center justify-center w-full text-slate-500 transition-colors">
-                <div class="nav-icon-wrapper transition-all duration-200 flex flex-col items-center">
-                    <i class="fas fa-chart-pie text-lg mb-1"></i>
-                </div>
-                <span class="text-[10px] font-medium mt-0.5">Ringkasan</span>
+    <nav class="md:hidden fixed bottom-0 w-full bg-white border-t border-slate-200 pb-safe z-20 shadow-[0_-5px_10px_rgba(0,0,0,0.02)]">
+        <div class="flex justify-around items-center h-16 relative">
+            <button onclick="navigate('dashboard')" id="nav-mobile-dashboard" class="nav-item-mobile active flex flex-col items-center justify-center w-1/5 text-slate-400 hover:text-blue-600 transition-colors">
+                <i class="fas fa-home text-lg mb-1"></i>
+                <span class="text-[9px] font-medium">Home</span>
             </button>
-            <button onclick="navigate('barang')" id="nav-barang-mobile" class="nav-item-mobile flex flex-col items-center justify-center w-full text-slate-500 transition-colors">
-                <div class="nav-icon-wrapper transition-all duration-200 flex flex-col items-center">
-                    <i class="fas fa-box-open text-lg mb-1"></i>
-                </div>
-                <span class="text-[10px] font-medium mt-0.5">Barang</span>
+            <button onclick="navigate('barang')" id="nav-mobile-barang" class="nav-item-mobile flex flex-col items-center justify-center w-1/5 text-slate-400 hover:text-blue-600 transition-colors">
+                <i class="fas fa-shopping-bag text-lg mb-1"></i>
+                <span class="text-[9px] font-medium">Barang</span>
             </button>
-            <button onclick="navigate('tempat')" id="nav-tempat-mobile" class="nav-item-mobile flex flex-col items-center justify-center w-full text-slate-500 transition-colors">
-                <div class="nav-icon-wrapper transition-all duration-200 flex flex-col items-center">
-                    <i class="fas fa-map-marked-alt text-lg mb-1"></i>
-                </div>
-                <span class="text-[10px] font-medium mt-0.5">Tempat</span>
+            <button onclick="navigate('tempat')" id="nav-mobile-tempat" class="nav-item-mobile flex flex-col items-center justify-center w-1/5 text-slate-400 hover:text-blue-600 transition-colors">
+                <i class="fas fa-map-marked-alt text-lg mb-1"></i>
+                <span class="text-[9px] font-medium">Tempat</span>
+            </button>
+            <button onclick="navigate('tugas')" id="nav-mobile-tugas" class="nav-item-mobile flex flex-col items-center justify-center w-1/5 text-slate-400 hover:text-indigo-600 transition-colors">
+                <i class="fas fa-tasks text-lg mb-1"></i>
+                <span class="text-[9px] font-medium">Tugas</span>
+            </button>
+            <button onclick="navigate('catatan')" id="nav-mobile-catatan" class="nav-item-mobile flex flex-col items-center justify-center w-1/5 text-slate-400 hover:text-yellow-600 transition-colors">
+                <i class="fas fa-sticky-note text-lg mb-1"></i>
+                <span class="text-[9px] font-medium">Catatan</span>
             </button>
         </div>
     </nav>
 
-    <!-- Modals Backdrop -->
-    <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/50 z-40 hidden backdrop-blur-sm transition-opacity opacity-0"></div>
-
-    <!-- Modal Form Barang -->
-    <div id="modal-barang" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden pointer-events-none">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md modal-enter pointer-events-auto flex flex-col max-h-[90vh]">
-            <div class="flex justify-between items-center p-5 border-b border-slate-100">
-                <h3 class="text-lg font-bold text-slate-800" id="modal-barang-title">Tambah Barang Baru</h3>
-                <button onclick="closeModal('barang')" class="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
-                    <i class="fas fa-times"></i>
-                </button>
+    <!-- MODALS SECTION -->
+    <div id="modal-overlay" class="modal fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        
+        <!-- Modal Barang -->
+        <div id="modal-barang" class="hidden modal-content bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 class="font-bold text-lg text-slate-800" id="title-modal-barang">Tambah Barang</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center transition-colors"><i class="fas fa-times"></i></button>
             </div>
-            <div class="p-5 overflow-y-auto flex-1">
-                <form id="form-barang" class="space-y-4">
-                    <input type="hidden" id="barang-id">
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Barang <span class="text-red-500">*</span></label>
-                        <input type="text" id="barang-nama" required placeholder="Contoh: Laptop Gaming" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
+            <form id="form-barang" class="p-6 space-y-4">
+                <input type="hidden" id="barang-id">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Nama Barang *</label>
+                    <input type="text" id="barang-nama" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Harga *</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-2.5 text-slate-500 font-medium">Rp</span>
+                        <input type="number" id="barang-harga" required min="0" class="w-full pl-11 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                     </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Estimasi Harga (Rp) <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <span class="absolute left-4 top-2.5 text-slate-500 text-sm font-medium">Rp</span>
-                            <input type="number" id="barang-harga" required placeholder="0" min="0" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
-                        </div>
-                    </div>
-                    
+                </div>
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Prioritas</label>
-                        <div class="grid grid-cols-3 gap-3">
-                            <label class="cursor-pointer">
-                                <input type="radio" name="barang-prioritas" value="low" class="peer sr-only" checked>
-                                <div class="text-center px-2 py-2 rounded-lg border border-slate-200 text-slate-500 peer-checked:bg-slate-800 peer-checked:text-white peer-checked:border-slate-800 text-sm font-medium transition-colors">Rendah</div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="barang-prioritas" value="medium" class="peer sr-only">
-                                <div class="text-center px-2 py-2 rounded-lg border border-slate-200 text-slate-500 peer-checked:bg-yellow-500 peer-checked:text-white peer-checked:border-yellow-500 text-sm font-medium transition-colors">Sedang</div>
-                            </label>
-                            <label class="cursor-pointer">
-                                <input type="radio" name="barang-prioritas" value="high" class="peer sr-only">
-                                <div class="text-center px-2 py-2 rounded-lg border border-slate-200 text-slate-500 peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 text-sm font-medium transition-colors">Tinggi</div>
-                            </label>
-                        </div>
+                        <select id="barang-prioritas" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm">
+                            <option value="tinggi">🔥 Tinggi</option>
+                            <option value="sedang" selected>✨ Sedang</option>
+                            <option value="rendah">💡 Rendah</option>
+                        </select>
                     </div>
-
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Link Pembelian (Opsional)</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-2.5 text-slate-400"><i class="fas fa-link"></i></span>
-                            <input type="url" id="barang-link" placeholder="https://tokopedia.com/..." class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm">
-                        </div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Link Beli (Opsional)</label>
+                        <input type="url" id="barang-link" placeholder="https://" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
                     </div>
-                </form>
-            </div>
-            <div class="p-5 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl">
-                <button type="submit" form="form-barang" id="btn-save-barang" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold shadow-md shadow-blue-200 transition-colors flex justify-center items-center gap-2">
-                    <i class="fas fa-save"></i> Simpan Barang
-                </button>
-            </div>
+                </div>
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl shadow-sm transition-colors">Simpan Barang</button>
+                </div>
+            </form>
         </div>
-    </div>
 
-    <!-- Modal Form Tempat -->
-    <div id="modal-tempat" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden pointer-events-none">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md modal-enter pointer-events-auto flex flex-col max-h-[90vh]">
-            <div class="flex justify-between items-center p-5 border-b border-slate-100">
-                <h3 class="text-lg font-bold text-slate-800" id="modal-tempat-title">Tambah Tempat Tujuan</h3>
-                <button onclick="closeModal('tempat')" class="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
-                    <i class="fas fa-times"></i>
-                </button>
+        <!-- Modal Tempat -->
+        <div id="modal-tempat" class="hidden modal-content bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 class="font-bold text-lg text-slate-800" id="title-modal-tempat">Tambah Destinasi</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center transition-colors"><i class="fas fa-times"></i></button>
             </div>
-            <div class="p-5 overflow-y-auto flex-1">
-                <form id="form-tempat" class="space-y-4">
-                    <input type="hidden" id="tempat-id">
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Nama Tempat / Destinasi <span class="text-red-500">*</span></label>
-                        <input type="text" id="tempat-nama" required placeholder="Contoh: Labuan Bajo" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-sm">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Link Peta / Lokasi <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-2.5 text-slate-400"><i class="fas fa-map-marker-alt"></i></span>
-                            <input type="text" id="tempat-lokasi" required placeholder="https://goo.gl/maps/... atau ketik lokasi" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-sm">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Foto Tempat (Opsional)</label>
-                        <input type="file" id="tempat-foto" accept="image/*" class="w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 transition-colors bg-slate-50 border border-slate-200 rounded-xl p-1 outline-none">
-                        <div id="tempat-foto-preview-container" class="mt-3 hidden relative group">
-                            <img id="tempat-foto-preview" src="" class="w-full h-32 object-cover rounded-xl border border-slate-200 shadow-sm">
-                            <button type="button" onclick="removePhoto()" class="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm text-red-500 rounded-full flex items-center justify-center shadow hover:bg-red-50 hover:scale-105 transition-all">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                        <input type="hidden" id="tempat-foto-data">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Target Berangkat (Opsional)</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-2.5 text-slate-400"><i class="far fa-calendar-alt"></i></span>
-                            <input type="date" id="tempat-tanggal" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-sm text-slate-700">
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="p-5 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl">
-                <button type="submit" form="form-tempat" id="btn-save-tempat" class="w-full bg-teal-600 hover:bg-teal-700 text-white px-4 py-3 rounded-xl font-semibold shadow-md shadow-teal-200 transition-colors flex justify-center items-center gap-2">
-                    <i class="fas fa-save"></i> Simpan Destinasi
-                </button>
-            </div>
+            <form id="form-tempat" class="p-6 space-y-4">
+                <input type="hidden" id="tempat-id">
+                <input type="hidden" id="tempat-foto-base64">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Nama Tempat *</label>
+                    <input type="text" id="tempat-nama" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Detail / Link Google Maps *</label>
+                    <input type="text" id="tempat-lokasi" required placeholder="Alamat atau paste link Maps" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Foto Tempat (Opsional)</label>
+                    <input type="file" id="tempat-foto" accept="image/*" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+                    <p class="text-[10px] text-slate-500 mt-1">*Foto akan dikompres otomatis agar memori tetap lega.</p>
+                </div>
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl shadow-sm transition-colors">Simpan Tempat</button>
+                </div>
+            </form>
         </div>
-    </div>
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="fixed top-4 right-4 md:bottom-4 md:top-auto z-[60] flex flex-col gap-2 pointer-events-none"></div>
+        <!-- Modal Tugas -->
+        <div id="modal-tugas" class="hidden modal-content bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 class="font-bold text-lg text-slate-800" id="title-modal-tugas">Tambah Tugas Baru</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="form-tugas" class="p-6 space-y-4">
+                <input type="hidden" id="tugas-id">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Judul Tugas *</label>
+                    <input type="text" id="tugas-judul" required placeholder="Cth: Makalah Bab 1" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Mata Kuliah *</label>
+                    <input type="text" id="tugas-matkul" required placeholder="Cth: Algoritma" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Maksimal Pengerjaan (Deadline) *</label>
+                    <input type="datetime-local" id="tugas-deadline" required class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                </div>
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-sm transition-colors">Simpan Tugas</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Modal Catatan -->
+        <div id="modal-catatan" class="hidden modal-content bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-yellow-50/50">
+                <h3 class="font-bold text-lg text-slate-800" id="title-modal-catatan">Buat Catatan</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 w-8 h-8 rounded-full hover:bg-red-50 flex items-center justify-center transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="form-catatan" class="p-6 space-y-4">
+                <input type="hidden" id="catatan-id">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Judul Catatan</label>
+                        <input type="text" id="catatan-judul" required placeholder="Ide cemerlang..." class="w-full px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-yellow-500 outline-none transition-all">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Kategori / Matkul</label>
+                        <input type="text" id="catatan-matkul" placeholder="Umum" class="w-full px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-yellow-500 outline-none transition-all">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Isi Catatan *</label>
+                    <textarea id="catatan-isi" required rows="4" class="w-full px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-yellow-500 outline-none transition-all resize-none"></textarea>
+                </div>
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 rounded-xl shadow-sm transition-colors text-slate-900">Simpan Catatan</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
 
     <script>
-        // Local Storage Keys
-        const STORAGE_KEY_ITEMS = 'wishlist_pro_items';
-        const STORAGE_KEY_PLACES = 'wishlist_pro_places';
-        
-        // Global State
-        let globalItems = [];
-        let globalPlaces = [];
-        let currentFilterBarang = 'all';
-        let currentFilterTempat = 'all';
-
-        // Helper to generate unique ID
-        const generateId = () => '_' + Math.random().toString(36).substr(2, 9);
-
-        // Helper check URL
-        const isUrl = (string) => {
-            try { return Boolean(new URL(string)); }
-            catch(e){ return false; }
+        // State Management
+        let appData = {
+            barang: [],
+            tempat: [],
+            tugas: [],
+            catatan: []
         };
 
-        // Helper Image Processing (Compression for localStorage)
-        const initPhotoUpload = () => {
-            const fotoInput = document.getElementById('tempat-foto');
-            if(fotoInput) {
-                fotoInput.addEventListener('change', function(e) {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        const img = new Image();
-                        img.onload = function() {
-                            const canvas = document.createElement('canvas');
-                            const MAX_WIDTH = 800; // Resize agar tidak memenuhi localStorage
-                            const MAX_HEIGHT = 600;
-                            let width = img.width;
-                            let height = img.height;
-
-                            if (width > height) {
-                                if (width > MAX_WIDTH) {
-                                    height *= MAX_WIDTH / width;
-                                    width = MAX_WIDTH;
-                                }
-                            } else {
-                                if (height > MAX_HEIGHT) {
-                                    width *= MAX_HEIGHT / height;
-                                    height = MAX_HEIGHT;
-                                }
-                            }
-                            canvas.width = width;
-                            canvas.height = height;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, width, height);
-                            
-                            // Compress kualitas 60%
-                            const base64String = canvas.toDataURL('image/jpeg', 0.6); 
-                            document.getElementById('tempat-foto-data').value = base64String;
-                            document.getElementById('tempat-foto-preview').src = base64String;
-                            document.getElementById('tempat-foto-preview-container').classList.remove('hidden');
-                        }
-                        img.src = event.target.result;
-                    }
-                    reader.readAsDataURL(file);
-                });
+        // Initialize App - Dibuat SUPER AMAN agar data lama tidak hilang!
+        function initApp() {
+            const savedData = localStorage.getItem('wishlist_pro_data');
+            
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    // MERGE DATA: Memastikan struktur array tetap ada walaupun user pakai versi lama
+                    // Ini mencegah TypeError yang membuat seluruh aplikasi mereset ulang data.
+                    appData.barang = Array.isArray(parsed.barang) ? parsed.barang : [];
+                    appData.tempat = Array.isArray(parsed.tempat) ? parsed.tempat : [];
+                    appData.tugas = Array.isArray(parsed.tugas) ? parsed.tugas : [];
+                    appData.catatan = Array.isArray(parsed.catatan) ? parsed.catatan : [];
+                } catch(e) {
+                    console.error("Gagal memproses sebagian data, tapi file lama tetap dipertahankan.");
+                }
             }
-        };
+            renderAll();
+        }
 
-        window.removePhoto = () => {
-            document.getElementById('tempat-foto').value = '';
-            document.getElementById('tempat-foto-data').value = '';
-            document.getElementById('tempat-foto-preview').src = '';
-            document.getElementById('tempat-foto-preview-container').classList.add('hidden');
-        };
+        // Menyimpan data ke memory device
+        function saveData() {
+            localStorage.setItem('wishlist_pro_data', JSON.stringify(appData));
+            renderAll();
+        }
 
-        // Formatters
-        const formatRupiah = (angka) => {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
-        };
-        const formatDate = (dateString) => {
-            if(!dateString) return '-';
-            const options = { day: 'numeric', month: 'short', year: 'numeric' };
-            return new Date(dateString).toLocaleDateString('id-ID', options);
-        };
-
-        window.showToast = (message, type = 'success') => {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            const colorConfig = {
-                success: { bg: 'bg-emerald-600', icon: 'fa-check-circle' },
-                error: { bg: 'bg-red-600', icon: 'fa-exclamation-circle' },
-                info: { bg: 'bg-blue-600', icon: 'fa-info-circle' }
-            };
-            const config = colorConfig[type] || colorConfig.info;
-            
-            toast.className = `${config.bg} text-white px-4 py-3 rounded-xl shadow-lg shadow-slate-200/50 flex items-center gap-3 toast-enter toast-enter-active max-w-sm pointer-events-auto text-sm font-medium`;
-            toast.innerHTML = `<i class="fas ${config.icon}"></i> <span>${message}</span>`;
-            
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.classList.remove('toast-enter', 'toast-enter-active');
-                toast.classList.add('toast-exit-active');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        };
-
-        window.navigate = (pageId) => {
-            ['dashboard', 'barang', 'tempat'].forEach(id => {
-                document.getElementById(`nav-${id}-desktop`).classList.remove('active', 'bg-blue-50', 'text-blue-600');
-                document.getElementById(`nav-${id}-desktop`).classList.add('text-slate-600');
-                document.getElementById(`nav-${id}-mobile`).classList.remove('active');
-                document.getElementById(`page-${id}`).classList.remove('block');
-                document.getElementById(`page-${id}`).classList.add('hidden');
+        // Navigation UI
+        function navigate(pageId) {
+            document.querySelectorAll('.page-section').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('block');
             });
-
-            document.getElementById(`nav-${pageId}-desktop`).classList.add('active', 'bg-blue-50', 'text-blue-600');
-            document.getElementById(`nav-${pageId}-desktop`).classList.remove('text-slate-600');
-            document.getElementById(`nav-${pageId}-mobile`).classList.add('active');
             document.getElementById(`page-${pageId}`).classList.remove('hidden');
             document.getElementById(`page-${pageId}`).classList.add('block');
-            document.getElementById('main-scroll-area').scrollTop = 0;
-        };
 
-        window.openModal = (type, id = null) => {
-            const backdrop = document.getElementById('modal-backdrop');
-            const modal = document.getElementById(`modal-${type}`);
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if(document.getElementById(`nav-desktop-${pageId}`)) document.getElementById(`nav-desktop-${pageId}`).classList.add('active');
+
+            document.querySelectorAll('.nav-item-mobile').forEach(el => el.classList.remove('active'));
+            if(document.getElementById(`nav-mobile-${pageId}`)) document.getElementById(`nav-mobile-${pageId}`).classList.add('active');
+        }
+
+        // Modal Functions
+        function openModal(type, editId = null) {
+            document.getElementById('modal-overlay').classList.add('show');
+            document.querySelectorAll('.modal-content').forEach(el => el.classList.add('hidden'));
+            
             const form = document.getElementById(`form-${type}`);
-            
             form.reset();
-            document.getElementById(`${type}-id`).value = ''; 
-            
-            if (type === 'barang') {
-                document.getElementById('modal-barang-title').innerText = id ? 'Edit Barang' : 'Tambah Barang Baru';
-                document.getElementById('btn-save-barang').innerHTML = id ? '<i class="fas fa-save"></i> Simpan Perubahan' : '<i class="fas fa-plus"></i> Tambah Barang';
-                if (id) {
-                    const item = globalItems.find(i => i.id === id);
-                    if (item) {
+            document.getElementById(`modal-${type}`).classList.remove('hidden');
+
+            if (type === 'tempat') document.getElementById('tempat-foto-base64').value = "";
+
+            if (editId) {
+                document.getElementById(`title-modal-${type}`).innerText = `Edit Data`;
+                const item = appData[type].find(i => i.id === editId);
+                if (item) {
+                    if (type === 'barang') {
                         document.getElementById('barang-id').value = item.id;
                         document.getElementById('barang-nama').value = item.name;
                         document.getElementById('barang-harga').value = item.price;
+                        document.getElementById('barang-prioritas').value = item.priority || 'sedang';
                         document.getElementById('barang-link').value = item.link || '';
-                        document.querySelector(`input[name="barang-prioritas"][value="${item.priority || 'low'}"]`).checked = true;
+                    } else if (type === 'tempat') {
+                        document.getElementById('tempat-id').value = item.id;
+                        document.getElementById('tempat-nama').value = item.name;
+                        document.getElementById('tempat-lokasi').value = item.location;
+                        document.getElementById('tempat-foto-base64').value = item.photo || '';
+                    } else if (type === 'tugas') {
+                        document.getElementById('tugas-id').value = item.id;
+                        document.getElementById('tugas-judul').value = item.judul;
+                        document.getElementById('tugas-matkul').value = item.matkul;
+                        document.getElementById('tugas-deadline').value = item.deadline;
+                    } else if (type === 'catatan') {
+                        document.getElementById('catatan-id').value = item.id;
+                        document.getElementById('catatan-judul').value = item.judul;
+                        document.getElementById('catatan-matkul').value = item.matkul;
+                        document.getElementById('catatan-isi').value = item.isi;
                     }
                 }
-            } else if (type === 'tempat') {
-                document.getElementById('modal-tempat-title').innerText = id ? 'Edit Tempat' : 'Tambah Tempat Baru';
-                document.getElementById('btn-save-tempat').innerHTML = id ? '<i class="fas fa-save"></i> Simpan Perubahan' : '<i class="fas fa-plus"></i> Tambah Tempat';
-                
-                removePhoto(); // Reset form foto terlebih dahulu
-                
-                if (id) {
-                    const place = globalPlaces.find(p => p.id === id);
-                    if (place) {
-                        document.getElementById('tempat-id').value = place.id;
-                        document.getElementById('tempat-nama').value = place.name;
-                        document.getElementById('tempat-lokasi').value = place.location;
-                        document.getElementById('tempat-tanggal').value = place.targetDate || '';
-                        
-                        if (place.photo) {
-                            document.getElementById('tempat-foto-data').value = place.photo;
-                            document.getElementById('tempat-foto-preview').src = place.photo;
-                            document.getElementById('tempat-foto-preview-container').classList.remove('hidden');
-                        }
-                    }
-                }
+            } else {
+                document.getElementById(`title-modal-${type}`).innerText = `Tambah Data`;
+                document.getElementById(`${type}-id`).value = "";
             }
+        }
 
-            backdrop.classList.remove('hidden');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                backdrop.classList.remove('opacity-0');
-                modal.querySelector('.modal-enter').classList.add('modal-enter-active');
-            }, 10);
+        function closeModal() {
+            document.getElementById('modal-overlay').classList.remove('show');
+        }
+
+        // Action Helpers
+        window.deleteItem = (type, id) => {
+            if(confirm('Yakin ingin menghapus data ini?')) {
+                appData[type] = appData[type].filter(i => i.id !== id);
+                saveData();
+            }
         };
 
-        window.closeModal = (type) => {
-            const backdrop = document.getElementById('modal-backdrop');
-            const modal = document.getElementById(`modal-${type}`);
-            const modalContent = modal.querySelector('.modal-enter');
-            
-            backdrop.classList.add('opacity-0');
-            modalContent.classList.remove('modal-enter-active');
-            modalContent.classList.add('modal-exit-active');
-            
-            setTimeout(() => {
-                backdrop.classList.add('hidden');
-                modal.classList.add('hidden');
-                modalContent.classList.remove('modal-exit-active');
-            }, 200); 
+        window.toggleStatus = (type, id) => {
+            const item = appData[type].find(i => i.id === id);
+            if(item) {
+                if(type === 'barang' || type === 'tugas') item.completed = !item.completed;
+                if(type === 'tempat') item.visited = !item.visited;
+                saveData();
+            }
         };
 
-        // Filter Handlers
-        document.getElementById('filter-barang').addEventListener('change', (e) => {
-            currentFilterBarang = e.target.value;
-            renderBarang();
-        });
-        document.getElementById('filter-tempat').addEventListener('change', (e) => {
-            currentFilterTempat = e.target.value;
-            renderTempat();
-        });
-
-        function loadData() {
-            const storedItems = localStorage.getItem(STORAGE_KEY_ITEMS);
-            if (storedItems) {
-                globalItems = JSON.parse(storedItems);
+        // Utility Helpers
+        const formatIDR = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+        const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+        
+        function detectLink(text) {
+            const urlPattern = /(https?:\/\/[^\s]+)/g;
+            if (urlPattern.test(text)) {
+                return text.replace(urlPattern, url => `<br><a href="${url}" target="_blank" class="text-blue-500 hover:underline font-semibold bg-blue-50 px-2 py-1 rounded-md text-xs border border-blue-100 inline-flex items-center gap-1 mt-1"><i class="fas fa-external-link-alt"></i> Buka Peta</a>`);
             }
-            
-            const storedPlaces = localStorage.getItem(STORAGE_KEY_PLACES);
-            if (storedPlaces) {
-                globalPlaces = JSON.parse(storedPlaces);
-            }
+            return text;
+        }
 
-            // Sort by createdAt descending
-            globalItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-            globalPlaces.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
+        function renderAll() {
             renderBarang();
             renderTempat();
-            updateDashboard();
-        }
-
-        function saveData(type) {
-            if (type === 'items' || type === 'all') {
-                localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(globalItems));
-                renderBarang();
-            }
-            if (type === 'places' || type === 'all') {
-                localStorage.setItem(STORAGE_KEY_PLACES, JSON.stringify(globalPlaces));
-                renderTempat();
-            }
-            updateDashboard();
-        }
-
-        function updateDashboard() {
-            // Calculate Items Stats
-            const totalItems = globalItems.length;
-            const boughtItems = globalItems.filter(i => i.completed).length;
-            const itemsProgress = totalItems === 0 ? 0 : Math.round((boughtItems / totalItems) * 100);
-            let neededBudget = 0;
-            let activeItemsCount = 0;
-            
-            globalItems.forEach(item => {
-                if (!item.completed) {
-                    neededBudget += Number(item.price);
-                    activeItemsCount++;
-                }
-            });
-
-            document.getElementById('stat-total-budget').innerText = formatRupiah(neededBudget);
-            document.getElementById('stat-budget-detail').innerText = `${activeItemsCount} barang belum terbeli`;
-            document.getElementById('stat-items-bought').innerHTML = `${boughtItems} <span class="text-lg text-slate-400 font-medium">/ ${totalItems}</span>`;
-            document.getElementById('progress-items').style.width = `${itemsProgress}%`;
-
-            // Calculate Places Stats
-            const totalPlaces = globalPlaces.length;
-            const visitedPlaces = globalPlaces.filter(p => p.visited).length;
-            const placesProgress = totalPlaces === 0 ? 0 : Math.round((visitedPlaces / totalPlaces) * 100);
-
-            document.getElementById('stat-places-visited').innerHTML = `${visitedPlaces} <span class="text-lg text-slate-400 font-medium">/ ${totalPlaces}</span>`;
-            document.getElementById('progress-places').style.width = `${placesProgress}%`;
-
-            // Update Recent Preview Lists 
-            const recentItemsContainer = document.getElementById('recent-items-list');
-            const topItems = globalItems.filter(i => !i.completed).slice(0, 3);
-            if(topItems.length > 0) {
-                recentItemsContainer.innerHTML = topItems.map(item => `
-                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <div class="flex items-center gap-3 overflow-hidden">
-                            <div class="w-2 h-2 rounded-full ${getPriorityColor(item.priority, true)} flex-shrink-0"></div>
-                            <span class="text-sm font-semibold text-slate-700 truncate">${item.name}</span>
-                        </div>
-                        <span class="text-sm font-bold text-blue-600 flex-shrink-0 ml-2">${formatRupiah(item.price)}</span>
-                    </div>
-                `).join('');
-            } else {
-                recentItemsContainer.innerHTML = `<p class="text-sm text-slate-400 italic text-center py-2">Semua target barang sudah terpenuhi! 🎉</p>`;
-            }
-
-            const recentPlacesContainer = document.getElementById('recent-places-list');
-            const topPlaces = globalPlaces.filter(p => !p.visited).slice(0, 3);
-            if(topPlaces.length > 0) {
-                recentPlacesContainer.innerHTML = topPlaces.map(place => `
-                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <div class="flex flex-col overflow-hidden">
-                            <span class="text-sm font-semibold text-slate-700 truncate">${place.name}</span>
-                            <span class="text-xs text-slate-500 truncate"><i class="fas fa-map-pin text-teal-400 mr-1"></i> ${place.location}</span>
-                        </div>
-                        ${place.targetDate ? `<span class="text-[10px] font-medium bg-white px-2 py-1 rounded-md border border-slate-200 text-slate-500 flex-shrink-0 ml-2 whitespace-nowrap">${formatDate(place.targetDate)}</span>` : ''}
-                    </div>
-                `).join('');
-            } else {
-                recentPlacesContainer.innerHTML = `<p class="text-sm text-slate-400 italic text-center py-2">Belum ada destinasi tujuan baru. 🏖️</p>`;
-            }
-        }
-
-        function getPriorityColor(priority, bgOnly = false) {
-            if(priority === 'high') return bgOnly ? 'bg-red-500' : 'bg-red-100 text-red-600';
-            if(priority === 'medium') return bgOnly ? 'bg-yellow-500' : 'bg-yellow-100 text-yellow-600';
-            return bgOnly ? 'bg-slate-400' : 'bg-slate-100 text-slate-600'; 
-        }
-        function getPriorityLabel(priority) {
-            if(priority === 'high') return 'Tinggi';
-            if(priority === 'medium') return 'Sedang';
-            return 'Rendah';
+            renderTugas();
+            renderCatatan();
+            renderDashboard(); // Harus dipanggil terakhir agar menghitung dari data terbaru
         }
 
         function renderBarang() {
-            const container = document.getElementById('list-barang-container');
-            let filtered = globalItems;
-            
-            if(currentFilterBarang === 'active') filtered = globalItems.filter(i => !i.completed);
-            else if(currentFilterBarang === 'completed') filtered = globalItems.filter(i => i.completed);
-
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full py-16 px-4 text-center">
-                        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-box-open text-3xl text-blue-300"></i>
-                        </div>
-                        <h3 class="text-slate-700 font-semibold mb-1">Data Kosong</h3>
-                        <p class="text-slate-500 text-sm">Tidak ada barang yang sesuai dengan filter saat ini.</p>
-                    </div>`;
+            const list = document.getElementById('list-barang');
+            list.innerHTML = '';
+            if(appData.barang.length === 0) {
+                list.innerHTML = `<div class="p-8 text-center text-slate-400"><i class="fas fa-box-open text-3xl mb-2 text-slate-300"></i><p class="text-sm">Wishlist barang kosong.</p></div>`;
                 return;
             }
-
-            container.innerHTML = filtered.map(item => `
-                <div class="bg-white rounded-2xl p-5 shadow-sm border ${item.completed ? 'border-emerald-100 bg-slate-50/50' : 'border-slate-100 hover:shadow-md'} transition-all relative group flex flex-col h-full">
-                    
-                    ${item.completed ? `<div class="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-2xl tracking-wide shadow-sm z-10"><i class="fas fa-check mr-1"></i> DIBELI</div>` : ''}
-                    
-                    <div class="flex-1">
-                        <div class="flex justify-between items-start mb-1 pr-16">
-                            <h4 class="font-bold text-lg ${item.completed ? 'text-slate-500 line-through' : 'text-slate-800'} line-clamp-2 leading-tight">${item.name}</h4>
+            
+            appData.barang.sort((a,b) => b.createdAt - a.createdAt).forEach(item => {
+                let badgeColor = item.priority === 'tinggi' ? 'bg-red-100 text-red-600' : (item.priority === 'rendah' ? 'bg-slate-100 text-slate-600' : 'bg-yellow-100 text-yellow-600');
+                
+                list.innerHTML += `
+                <div class="p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors ${item.completed ? 'opacity-60 bg-slate-50' : ''}">
+                    <button onclick="toggleStatus('barang', '${item.id}')" class="w-6 h-6 shrink-0 rounded-md border-2 flex items-center justify-center transition-all ${item.completed ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-300 text-transparent hover:border-blue-400'}">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <h4 class="font-semibold text-sm ${item.completed ? 'line-through text-slate-500' : 'text-slate-800'} truncate">${item.name}</h4>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider ${badgeColor}">${item.priority || 'sedang'}</span>
                         </div>
-                        
-                        <div class="flex flex-wrap gap-2 mb-4 mt-2">
-                            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md ${getPriorityColor(item.priority)}">
-                                Prioritas ${getPriorityLabel(item.priority)}
-                            </span>
-                            ${item.link ? `<a href="${item.link}" target="_blank" class="text-[10px] font-medium px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors inline-flex items-center gap-1"><i class="fas fa-external-link-alt"></i> Link Toko</a>` : ''}
-                        </div>
-                        
-                        <div class="mb-4">
-                            <p class="text-xs text-slate-400 mb-0.5">Estimasi Harga</p>
-                            <p class="text-xl font-bold ${item.completed ? 'text-slate-400' : 'text-blue-600'}">${formatRupiah(item.price)}</p>
-                        </div>
+                        <p class="text-sm font-bold text-blue-600">${formatIDR(item.price)}</p>
+                        ${item.link ? `<a href="${item.link}" target="_blank" class="text-xs text-blue-500 hover:underline mt-1 inline-block"><i class="fas fa-link"></i> Link Pembelian</a>` : ''}
                     </div>
-
-                    <div class="pt-4 border-t border-slate-100 flex gap-2">
-                        <button onclick="toggleStatus('${item.id}', 'items', ${item.completed})" class="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${item.completed ? 'bg-slate-200 text-slate-600 hover:bg-slate-300' : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm'}">
-                            ${item.completed ? '<i class="fas fa-undo"></i> Batal' : '<i class="fas fa-check"></i> Sudah Beli'}
-                        </button>
-                        <button onclick="openModal('barang', '${item.id}')" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors flex items-center justify-center">
-                            <i class="fas fa-pen text-sm"></i>
-                        </button>
-                        <button onclick="deleteData('${item.id}', 'items')" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors flex items-center justify-center">
-                            <i class="fas fa-trash-alt text-sm"></i>
-                        </button>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button onclick="openModal('barang', '${item.id}')" class="w-8 h-8 rounded-full text-slate-400 hover:text-blue-500 hover:bg-blue-50 flex items-center justify-center transition-colors"><i class="fas fa-pen text-xs"></i></button>
+                        <button onclick="deleteItem('barang', '${item.id}')" class="w-8 h-8 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-colors"><i class="fas fa-trash text-xs"></i></button>
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            });
         }
 
         function renderTempat() {
-            const container = document.getElementById('list-tempat-container');
-            let filtered = globalPlaces;
-            
-            if(currentFilterTempat === 'active') filtered = globalPlaces.filter(i => !i.visited);
-            else if(currentFilterTempat === 'completed') filtered = globalPlaces.filter(i => i.visited);
-
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full py-16 px-4 text-center">
-                        <div class="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-map-marked-alt text-3xl text-teal-300"></i>
-                        </div>
-                        <h3 class="text-slate-700 font-semibold mb-1">Data Kosong</h3>
-                        <p class="text-slate-500 text-sm">Belum ada tempat impian yang sesuai.</p>
-                    </div>`;
+            const list = document.getElementById('list-tempat');
+            list.innerHTML = '';
+            if(appData.tempat.length === 0) {
+                list.innerHTML = `<div class="col-span-full p-8 text-center text-slate-400"><i class="fas fa-map-marked-alt text-3xl mb-2 text-slate-300"></i><p class="text-sm">Belum ada destinasi tersimpan.</p></div>`;
                 return;
             }
 
-            container.innerHTML = filtered.map(place => `
-                <div class="bg-white rounded-2xl shadow-sm border ${place.visited ? 'border-teal-100 bg-slate-50/50' : 'border-slate-100 hover:shadow-md'} transition-all relative flex flex-col h-full overflow-hidden">
-                    
-                    ${place.visited ? `<div class="absolute top-0 right-0 bg-teal-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl z-20 tracking-wide shadow-sm"><i class="fas fa-flag mr-1"></i> DIKUNJUNGI</div>` : ''}
-                    
-                    ${place.photo ? `
-                    <div class="w-full h-40 bg-slate-100 relative group overflow-hidden border-b border-slate-100">
-                        <img src="${place.photo}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="${place.name}">
-                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent"></div>
-                    </div>` : ''}
-                    
-                    <div class="flex-1 p-5 flex flex-col">
-                        <div class="flex justify-between items-start mb-2 ${place.visited && !place.photo ? 'pr-20' : ''}">
-                            <h4 class="font-bold text-lg ${place.visited ? 'text-slate-500 line-through' : 'text-slate-800'} line-clamp-2 leading-tight">${place.name}</h4>
-                        </div>
+            appData.tempat.sort((a,b) => b.createdAt - a.createdAt).forEach(item => {
+                const imgHtml = item.photo ? `<div class="h-32 w-full bg-slate-100 overflow-hidden"><img src="${item.photo}" class="w-full h-full object-cover"></div>` : `<div class="h-24 w-full bg-emerald-50 flex flex-col items-center justify-center text-emerald-200"><i class="fas fa-image text-2xl mb-1"></i><span class="text-[10px]">Tanpa Foto</span></div>`;
+                
+                list.innerHTML += `
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100 relative ${item.visited ? 'opacity-70' : ''}">
+                    ${item.visited ? '<div class="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10"><i class="fas fa-check mr-1"></i>DIKUNJUNGI</div>' : ''}
+                    ${imgHtml}
+                    <div class="p-4">
+                        <h4 class="font-bold text-slate-800 mb-1 ${item.visited ? 'line-through text-slate-500' : ''}">${item.name}</h4>
+                        <p class="text-xs text-slate-500 mb-4 line-clamp-3 leading-relaxed">${detectLink(item.location)}</p>
                         
-                        <div class="space-y-2 mb-4 flex-1 mt-1">
-                            <p class="text-sm flex items-start gap-2 ${isUrl(place.location) ? 'text-blue-600' : 'text-slate-600'}">
-                                <i class="fas ${isUrl(place.location) ? 'fa-map-marked-alt text-blue-500' : 'fa-map-pin text-teal-500'} mt-1 w-4 text-center shrink-0"></i> 
-                                ${isUrl(place.location) ? `<a href="${place.location}" target="_blank" class="flex-1 leading-snug hover:underline font-medium break-all line-clamp-2">Lihat Lokasi / Peta <i class="fas fa-external-link-alt text-[10px] ml-1"></i></a>` : `<span class="flex-1 leading-snug break-words">${place.location}</span>`}
-                            </p>
-                            ${place.targetDate ? `
-                            <p class="text-sm text-slate-600 flex items-center gap-2">
-                                <i class="far fa-calendar-alt text-orange-400 w-4 text-center shrink-0"></i> 
-                                <span class="font-medium">${formatDate(place.targetDate)}</span>
-                            </p>
-                            ` : ''}
-                        </div>
-                        
-                        <div class="pt-4 border-t border-slate-100 flex gap-2 mt-auto">
-                            <button onclick="toggleStatus('${place.id}', 'places', ${place.visited})" class="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${place.visited ? 'bg-slate-200 text-slate-600 hover:bg-slate-300' : 'bg-teal-500 text-white hover:bg-teal-600 shadow-sm'}">
-                                ${place.visited ? '<i class="fas fa-undo"></i> Batal' : '<i class="fas fa-check-circle"></i> Selesai'}
+                        <div class="flex items-center gap-2 mt-auto">
+                            <button onclick="toggleStatus('tempat', '${item.id}')" class="flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${item.visited ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}">
+                                ${item.visited ? 'Batal' : 'Tandai Selesai'}
                             </button>
-                            <button onclick="openModal('tempat', '${place.id}')" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors flex items-center justify-center shrink-0">
-                                <i class="fas fa-pen text-sm"></i>
-                            </button>
-                            <button onclick="deleteData('${place.id}', 'places')" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-500 border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors flex items-center justify-center shrink-0">
-                                <i class="fas fa-trash-alt text-sm"></i>
-                            </button>
+                            <button onclick="openModal('tempat', '${item.id}')" class="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:text-blue-500 flex items-center justify-center transition-colors"><i class="fas fa-pen text-xs"></i></button>
+                            <button onclick="deleteItem('tempat', '${item.id}')" class="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 hover:text-red-500 flex items-center justify-center transition-colors"><i class="fas fa-trash text-xs"></i></button>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            });
         }
 
-        window.toggleStatus = (id, type, currentStatus) => {
-            if (type === 'items') {
-                const index = globalItems.findIndex(i => i.id === id);
-                if (index > -1) {
-                    globalItems[index].completed = !currentStatus;
-                    globalItems[index].updatedAt = Date.now();
-                    saveData('items');
-                    showToast(currentStatus ? "Barang dikembalikan ke wishlist." : "Hore! Barang berhasil dibeli! 🎉");
-                }
-            } else {
-                const index = globalPlaces.findIndex(p => p.id === id);
-                if (index > -1) {
-                    globalPlaces[index].visited = !currentStatus;
-                    globalPlaces[index].updatedAt = Date.now();
-                    saveData('places');
-                    showToast(currentStatus ? "Tempat dikembalikan ke wishlist." : "Mantap! Destinasi tercapai! ✈️");
-                }
+        function renderTugas() {
+            const list = document.getElementById('list-tugas');
+            list.innerHTML = '';
+            if(appData.tugas.length === 0) {
+                list.innerHTML = `<div class="col-span-full p-8 text-center text-slate-400"><i class="fas fa-tasks text-3xl mb-2 text-slate-300"></i><p class="text-sm">Hebat! Tidak ada tugas saat ini.</p></div>`;
+                return;
             }
-        };
 
-        window.deleteData = (id, type) => {
-            if (type === 'items') {
-                globalItems = globalItems.filter(i => i.id !== id);
-                saveData('items');
-            } else {
-                globalPlaces = globalPlaces.filter(p => p.id !== id);
-                saveData('places');
+            // Urutkan tugas: Belum selesai didahulukan, lalu diurutkan berdasarkan deadline terdekat
+            let sortedTugas = [...appData.tugas].sort((a,b) => {
+                if(a.completed !== b.completed) return a.completed ? 1 : -1;
+                return new Date(a.deadline) - new Date(b.deadline);
+            });
+
+            sortedTugas.forEach(item => {
+                list.innerHTML += `
+                <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 ${item.completed ? 'opacity-60 bg-slate-50' : 'hover:shadow-md transition-shadow'}">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded">${item.matkul}</span>
+                        <div class="flex gap-1">
+                            <button onclick="openModal('tugas', '${item.id}')" class="w-6 h-6 text-slate-400 hover:text-blue-500 flex items-center justify-center"><i class="fas fa-pen text-xs"></i></button>
+                            <button onclick="deleteItem('tugas', '${item.id}')" class="w-6 h-6 text-slate-400 hover:text-red-500 flex items-center justify-center"><i class="fas fa-times text-xs"></i></button>
+                        </div>
+                    </div>
+                    <h4 class="font-bold text-slate-800 mb-2 ${item.completed ? 'line-through text-slate-500' : ''}">${item.judul}</h4>
+                    
+                    <div class="mb-3">
+                        ${item.completed 
+                            ? `<span class="text-[10px] font-bold px-2 py-1 rounded bg-green-100 text-green-700 inline-flex items-center gap-1"><i class="fas fa-check"></i> Selesai</span>`
+                            : `<span class="live-timer" data-deadline="${item.deadline}">Menghitung waktu...</span>`
+                        }
+                    </div>
+
+                    <button onclick="toggleStatus('tugas', '${item.id}')" class="w-full py-2 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 ${item.completed ? 'bg-slate-200 text-slate-600 hover:bg-slate-300' : 'bg-indigo-600 text-white hover:bg-indigo-700'}">
+                        ${item.completed ? '<i class="fas fa-undo"></i> Batal Selesai' : '<i class="fas fa-check-circle"></i> Selesaikan Tugas'}
+                    </button>
+                </div>`;
+            });
+        }
+
+        function renderCatatan() {
+            const list = document.getElementById('list-catatan');
+            list.innerHTML = '';
+            if(appData.catatan.length === 0) {
+                list.innerHTML = `<div class="col-span-full p-8 text-center text-slate-400"><i class="fas fa-sticky-note text-3xl mb-2 text-slate-300"></i><p class="text-sm">Belum ada catatan.</p></div>`;
+                return;
             }
-            showToast("Data berhasil dihapus.", "success");
-        };
 
+            appData.catatan.sort((a,b) => b.createdAt - a.createdAt).forEach(item => {
+                list.innerHTML += `
+                <div class="bg-yellow-50 rounded-xl p-4 shadow-sm border border-yellow-100 relative group">
+                    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                        <button onclick="openModal('catatan', '${item.id}')" class="w-6 h-6 bg-white rounded shadow text-slate-500 hover:text-blue-500 flex items-center justify-center"><i class="fas fa-pen text-xs"></i></button>
+                        <button onclick="deleteItem('catatan', '${item.id}')" class="w-6 h-6 bg-white rounded shadow text-slate-500 hover:text-red-500 flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>
+                    </div>
+                    <span class="text-[9px] font-bold uppercase tracking-wider text-yellow-700 mb-1 block">${item.matkul || 'Umum'}</span>
+                    <h4 class="font-bold text-slate-800 mb-2">${item.judul || 'Tanpa Judul'}</h4>
+                    <p class="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">${item.isi}</p>
+                </div>`;
+            });
+        }
+
+        function renderDashboard() {
+            // Kalkulasi Statistik
+            let uncompletedBarang = appData.barang.filter(i => !i.completed);
+            let totalBudget = uncompletedBarang.reduce((sum, item) => sum + item.price, 0);
+            
+            let totalTempat = appData.tempat.length;
+            let visitedTempat = appData.tempat.filter(i => i.visited).length;
+
+            let totalTugas = appData.tugas.length;
+            let doneTugas = appData.tugas.filter(i => i.completed).length;
+
+            document.getElementById('stat-budget').innerText = formatIDR(totalBudget);
+            document.getElementById('stat-tempat').innerText = `${visitedTempat} / ${totalTempat}`;
+            document.getElementById('stat-tugas').innerText = `${doneTugas} / ${totalTugas}`;
+
+            // Tugas Urgent (Belum selesai & Deadline < 3 Hari)
+            const dashUrgent = document.getElementById('dash-urgent-tasks');
+            let urgentTasks = appData.tugas.filter(i => !i.completed).sort((a,b) => new Date(a.deadline) - new Date(b.deadline)).slice(0, 2);
+            
+            dashUrgent.innerHTML = '';
+            if (urgentTasks.length === 0) {
+                dashUrgent.innerHTML = `<div class="col-span-full text-sm text-slate-500 italic px-2">Semua tugas aman terkendali! 🎉</div>`;
+            } else {
+                urgentTasks.forEach(item => {
+                    dashUrgent.innerHTML += `
+                    <div class="bg-red-50 border border-red-100 rounded-xl p-3 flex justify-between items-center">
+                        <div class="min-w-0 pr-3">
+                            <p class="text-[10px] font-bold text-red-500 uppercase">${item.matkul}</p>
+                            <p class="font-semibold text-slate-800 text-sm truncate">${item.judul}</p>
+                        </div>
+                        <span class="live-timer shrink-0" data-deadline="${item.deadline}"></span>
+                    </div>`;
+                });
+            }
+
+            // Recent Items
+            const dashBarang = document.getElementById('dash-recent-barang');
+            dashBarang.innerHTML = '';
+            appData.barang.slice(0, 3).forEach(item => {
+                dashBarang.innerHTML += `<div class="flex items-center justify-between p-2 rounded hover:bg-slate-50"><span class="text-sm truncate ${item.completed ? 'line-through text-slate-400' : 'text-slate-700'}">${item.name}</span><span class="text-xs font-bold ${item.completed ? 'text-slate-400' : 'text-blue-600'}">${formatIDR(item.price)}</span></div>`;
+            });
+            if(appData.barang.length === 0) dashBarang.innerHTML = '<p class="text-xs text-slate-400 italic">Belum ada barang.</p>';
+
+            const dashTempat = document.getElementById('dash-recent-tempat');
+            dashTempat.innerHTML = '';
+            appData.tempat.slice(0, 3).forEach(item => {
+                dashTempat.innerHTML += `<div class="flex items-center gap-2 p-2 rounded hover:bg-slate-50"><i class="fas fa-map-marker-alt text-slate-300 text-xs"></i><span class="text-sm truncate ${item.visited ? 'line-through text-slate-400' : 'text-slate-700'}">${item.name}</span></div>`;
+            });
+            if(appData.tempat.length === 0) dashTempat.innerHTML = '<p class="text-xs text-slate-400 italic">Belum ada tempat.</p>';
+        }
+
+        function updateTimers() {
+            document.querySelectorAll('.live-timer').forEach(el => {
+                const deadlineStr = el.getAttribute('data-deadline');
+                if (!deadlineStr) return;
+                
+                const deadline = new Date(deadlineStr).getTime();
+                const now = Date.now();
+                const diff = deadline - now;
+                
+                if (diff <= 0) {
+                    el.innerHTML = '<i class="fas fa-exclamation-circle"></i> Terlambat';
+                    el.className = 'live-timer text-[10px] font-bold px-2 py-1 rounded bg-red-100 text-red-600 inline-flex items-center gap-1 border border-red-200';
+                    return;
+                }
+                
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const m = Math.floor((diff / 1000 / 60) % 60);
+                const s = Math.floor((diff / 1000) % 60);
+                
+                let text = '';
+                if (d > 0) text += `${d}h `;
+                if (h > 0 || d > 0) text += `${h}j `;
+                text += `${m}m ${s}d`;
+                
+                el.innerHTML = '<i class="fas fa-stopwatch"></i> ' + text;
+                
+                if (d < 1) el.className = 'live-timer text-[10px] font-bold px-2 py-1 rounded bg-orange-100 text-orange-600 inline-flex items-center gap-1 border border-orange-200';
+                else if (d < 3) el.className = 'live-timer text-[10px] font-bold px-2 py-1 rounded bg-yellow-100 text-yellow-700 inline-flex items-center gap-1 border border-yellow-200';
+                else el.className = 'live-timer text-[10px] font-bold px-2 py-1 rounded bg-indigo-50 text-indigo-600 inline-flex items-center gap-1 border border-indigo-100';
+            });
+        }
+        setInterval(updateTimers, 1000);
+
+        // Image Compression
+        document.getElementById('tempat-foto')?.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_SIZE = 600;
+                    let w = img.width, h = img.height;
+                    
+                    if (w > h && w > MAX_SIZE) { h *= MAX_SIZE / w; w = MAX_SIZE; }
+                    else if (h > MAX_SIZE) { w *= MAX_SIZE / h; h = MAX_SIZE; }
+                    
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    
+                    const base64 = canvas.toDataURL('image/jpeg', 0.7);
+                    document.getElementById('tempat-foto-base64').value = base64;
+                }
+            };
+        });
+
+        // Form Event Listeners
         document.getElementById('form-barang').addEventListener('submit', (e) => {
             e.preventDefault();
-
-            const btn = document.getElementById('btn-save-barang');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyimpan...`;
-            btn.disabled = true;
-
-            // setTimeout for simple UX loading simulation
-            setTimeout(() => {
-                const id = document.getElementById('barang-id').value;
-                const data = {
-                    name: document.getElementById('barang-nama').value,
-                    price: Number(document.getElementById('barang-harga').value),
-                    priority: document.querySelector('input[name="barang-prioritas"]:checked').value,
-                    link: document.getElementById('barang-link').value,
-                    updatedAt: Date.now()
-                };
-
-                if (id) {
-                    const index = globalItems.findIndex(i => i.id === id);
-                    if (index > -1) {
-                        globalItems[index] = { ...globalItems[index], ...data };
-                    }
-                    showToast("Perubahan barang disimpan!");
-                } else {
-                    data.id = generateId();
-                    data.completed = false;
-                    data.createdAt = Date.now();
-                    globalItems.unshift(data); // Add to beginning
-                    showToast("Barang baru ditambahkan!");
-                }
-                
-                saveData('items');
-                closeModal('barang');
-                
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }, 300);
+            const id = document.getElementById('barang-id').value;
+            const newData = {
+                id: id || generateId(),
+                name: document.getElementById('barang-nama').value,
+                price: Number(document.getElementById('barang-harga').value),
+                priority: document.getElementById('barang-prioritas').value,
+                link: document.getElementById('barang-link').value,
+                completed: id ? appData.barang.find(i=>i.id===id).completed : false,
+                createdAt: id ? appData.barang.find(i=>i.id===id).createdAt : Date.now()
+            };
+            if(id) appData.barang = appData.barang.map(i => i.id === id ? newData : i);
+            else appData.barang.push(newData);
+            
+            saveData(); closeModal();
         });
 
         document.getElementById('form-tempat').addEventListener('submit', (e) => {
             e.preventDefault();
-
-            const btn = document.getElementById('btn-save-tempat');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyimpan...`;
-            btn.disabled = true;
-
-            setTimeout(() => {
-                const id = document.getElementById('tempat-id').value;
-                const data = {
-                    name: document.getElementById('tempat-nama').value,
-                    location: document.getElementById('tempat-lokasi').value,
-                    targetDate: document.getElementById('tempat-tanggal').value,
-                    photo: document.getElementById('tempat-foto-data').value,
-                    updatedAt: Date.now()
-                };
-
-                if (id) {
-                    const index = globalPlaces.findIndex(p => p.id === id);
-                    if (index > -1) {
-                        globalPlaces[index] = { ...globalPlaces[index], ...data };
-                    }
-                    showToast("Perubahan tempat disimpan!");
-                } else {
-                    data.id = generateId();
-                    data.visited = false;
-                    data.createdAt = Date.now();
-                    globalPlaces.unshift(data); // Add to beginning
-                    showToast("Tempat baru ditambahkan!");
-                }
-                
-                saveData('places');
-                closeModal('tempat');
-
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }, 300);
+            const id = document.getElementById('tempat-id').value;
+            const newData = {
+                id: id || generateId(),
+                name: document.getElementById('tempat-nama').value,
+                location: document.getElementById('tempat-lokasi').value,
+                photo: document.getElementById('tempat-foto-base64').value,
+                visited: id ? appData.tempat.find(i=>i.id===id).visited : false,
+                createdAt: id ? appData.tempat.find(i=>i.id===id).createdAt : Date.now()
+            };
+            if(id) appData.tempat = appData.tempat.map(i => i.id === id ? newData : i);
+            else appData.tempat.push(newData);
+            
+            saveData(); closeModal();
         });
 
-        // Initialize on load
-        window.onload = () => {
-            initPhotoUpload();
-            loadData();
-        };
+        document.getElementById('form-tugas').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('tugas-id').value;
+            const newData = {
+                id: id || generateId(),
+                judul: document.getElementById('tugas-judul').value,
+                matkul: document.getElementById('tugas-matkul').value,
+                deadline: document.getElementById('tugas-deadline').value,
+                completed: id ? appData.tugas.find(i=>i.id===id).completed : false,
+                createdAt: id ? appData.tugas.find(i=>i.id===id).createdAt : Date.now()
+            };
+            if(id) appData.tugas = appData.tugas.map(i => i.id === id ? newData : i);
+            else appData.tugas.push(newData);
+            
+            saveData(); closeModal();
+        });
 
+        document.getElementById('form-catatan').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('catatan-id').value;
+            const newData = {
+                id: id || generateId(),
+                judul: document.getElementById('catatan-judul').value,
+                matkul: document.getElementById('catatan-matkul').value,
+                isi: document.getElementById('catatan-isi').value,
+                createdAt: id ? appData.catatan.find(i=>i.id===id).createdAt : Date.now()
+            };
+            if(id) appData.catatan = appData.catatan.map(i => i.id === id ? newData : i);
+            else appData.catatan.push(newData);
+            
+            saveData(); closeModal();
+        });
+
+        // Mulai aplikasi saat script dimuat
+        initApp();
     </script>
 </body>
 </html>
