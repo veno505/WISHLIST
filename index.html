@@ -364,14 +364,12 @@
     </div>
 
     <script type="module">
-        // Import Firebase SDK v11.6.1 (Versi kompatibel dengan lingkungan sandbox)
+        // Import Firebase SDK v11.6.1 (Tanpa Auth agar semua device bisa akses dokumen yang sama)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Konfigurasi Firebase dari akun Anda
-        // Kami jadikan prioritas, fallback ke env jika diperlukan
-        const userFirebaseConfig = {
+        const firebaseConfig = {
             apiKey: "AIzaSyBRqtDo6I0JRBxV-2Cr4D0W8xRr0rDYXpI",
             authDomain: "keuangan-project-91d0a.firebaseapp.com",
             projectId: "keuangan-project-91d0a",
@@ -381,14 +379,12 @@
             measurementId: "G-95KQYRMYCC"
         };
         
-        // Cek config environment canvas (jika ada) untuk keamanan, gunakan config milik Anda sebagai default
-        const activeConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userFirebaseConfig;
-        
-        const app = initializeApp(activeConfig);
-        const auth = getAuth(app);
+        const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        let currentUserUid = null;
-        let DATABASE_REF = null;
+        
+        // KUNCI SINKRONISASI SEMUA DEVICE:
+        // Hardcode nama dokumen agar HP, Laptop, dan Tablet membaca data yang persis sama.
+        const DATABASE_REF = doc(db, 'wishlist_data', 'database_utama_saya');
 
         // State Management Default
         let appData = {
@@ -398,28 +394,18 @@
             catatan: []
         };
 
-        // Inisialisasi Auth & Sinkronisasi
+        // Inisialisasi & Sinkronisasi
         async function initCloudSync() {
             try {
-                // Menggunakan Anonymous login agar unik tiap user device (tanpa form login)
-                const userCredential = await signInAnonymously(auth);
-                currentUserUid = userCredential.user.uid;
-                
-                // Gunakan Path khusus user agar tidak bentrok
-                // Koleksi: users -> [uid] -> wishlist_data -> main_state
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app';
-                
-                // Jika ingin menggunakan dokumen global (seperti uangku_data), bisa uncomment ini:
-                // DATABASE_REF = doc(db, "uangku_data", currentUserUid + "_wishlist");
-                
-                // Struktur disarankan untuk keamanan sandbox
-                DATABASE_REF = doc(db, 'artifacts', appId, 'users', currentUserUid, 'wishlist_data', 'main_state');
-
+                updateCloudUI('syncing');
                 await loadDataFromCloud();
                 updateCloudUI('connected');
+                
+                // Auto-refresh tiap 5 detik agar update dari device lain otomatis masuk
+                setInterval(loadDataFromCloud, 5000);
             } catch (error) {
                 console.error("Gagal terhubung ke Cloud Firebase:", error);
-                updateCloudUI('error');
+                updateCloudUI('error', error.message);
                 
                 // Fallback ke LocalStorage jika internet putus
                 const savedData = localStorage.getItem('wishlist_pro_data');
@@ -464,12 +450,12 @@
                     setTimeout(() => updateCloudUI('connected'), 500); // Visual feedback
                 } catch (error) {
                     console.error("Gagal menyimpan ke Cloud:", error);
-                    updateCloudUI('error');
+                    updateCloudUI('error', "Izin Ditolak. Cek Rules Firestore.");
                 }
             }
         }
 
-        function updateCloudUI(state) {
+        function updateCloudUI(state, errorMessage = "") {
             const container = document.getElementById('cloud-status-container');
             const icon = document.getElementById('cloud-icon');
             const title = document.getElementById('cloud-title');
@@ -495,7 +481,13 @@
                  icon.className = 'fas fa-exclamation-triangle text-red-500';
                  title.className = 'text-xs font-semibold text-red-800';
                  title.innerText = 'Offline Mode';
-                 desc.innerText = 'Gagal sinkron Cloud';
+                 
+                 // Tampilkan pesan error singkat
+                 let errText = 'Gagal sinkron Cloud';
+                 if (String(errorMessage).includes('permission')) errText = 'Izin Firestore Ditolak';
+                 else if (errorMessage) errText = errorMessage;
+                 
+                 desc.innerText = errText;
                  
                  mobileIcon.className = 'w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500 border border-red-100';
                  mobileIcon.innerHTML = '<i class="fas fa-exclamation-triangle text-xs"></i>';
